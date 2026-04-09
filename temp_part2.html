@@ -1,0 +1,976 @@
+        set[key] = true;
+      });
+      return set;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function toggleChamado(id) {
+      const chamados = loadChamados();
+      const item = chamados.find(c => c.id === id);
+      if (!item) return;
+      item.status = item.status === 'concluido' ? 'a-fazer' : 'concluido';
+      item.modifiedAt = new Date().toISOString();
+      saveChamados(chamados);
+      renderChamados();
+    }
+
+    function editChamado(id) {
+      const chamados = loadChamados();
+      const item = chamados.find(c => c.id === id);
+      if (!item) return;
+
+      document.getElementById('editId').value = id;
+      document.getElementById('editNumero').value = item.numero;
+      document.getElementById('editLocal').value = item.local;
+      document.getElementById('editProblema').value = item.problem;
+      document.getElementById('editUrgencia').value = item.urgency || 'media';
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const numero = document.getElementById('editNumero').value.trim();
+      const local = document.getElementById('editLocal').value.trim();
+      const problema = document.getElementById('editProblema').value.trim();
+      const urgencia = document.getElementById('editUrgencia').value;
+      if (!numero || !local || !problema) return;
+
+      const chamados = loadChamados();
+      const item = chamados.find(c => c.id === id);
+      if (!item) return;
+      item.numero = numero;
+      item.local = local;
+      item.problem = problema;
+      item.urgency = urgencia;
+      item.modifiedAt = new Date().toISOString();
+      saveChamados(chamados);
+      closeEditModal();
+      renderChamados();
+    });
+
+    function deleteChamado(id) {
+      const chamados = loadChamados().filter(c => c.id !== id);
+      saveChamados(chamados);
+      renderChamados();
+    }
+
+    document.getElementById('chamadoForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const numero = document.getElementById('chamadoNumero').value.trim();
+      const local = document.getElementById('chamadoLocal').value.trim();
+      const problema = document.getElementById('chamadoProblema').value.trim();
+      const urgencia = document.getElementById('chamadoUrgencia').value;
+      if (!numero || !local || !problema) return;
+
+      // Detectar região automaticamente
+      const regiao = detectRegionFromLocal(local);
+
+      const chamados = loadChamados();
+      chamados.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        numero, local, problem: problema, status: 'a-fazer', urgency: urgencia,
+        regiao: regiao,
+        modifiedAt: new Date().toISOString()
+      });
+      saveChamados(chamados);
+
+      const regionDetected = document.getElementById('region-detected');
+      if (regionDetected) {
+        regionDetected.textContent = `✓ Chamado adicionado na região ${regiao}`;
+        regionDetected.style.color = REGION_COLORS[regiao];
+      }
+
+      document.getElementById('chamadoNumero').value = '';
+      document.getElementById('chamadoLocal').value = '';
+      document.getElementById('chamadoProblema').value = '';
+      document.getElementById('chamadoUrgencia').value = 'media';
+      renderChamados();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderChamados();
+      });
+    });
+
+    // ============ SEARCH WITH SUGGESTIONS ============
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    let suggestionsTimeout;
+
+    // Show suggestions as user types (number, local, or problem)
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      clearTimeout(suggestionsTimeout);
+
+      if (!query || query.length < 1) {
+        hideSuggestions();
+        // Limpar a busca e mostrar todos os chamados novamente
+        renderChamados();
+        return;
+      }
+
+      // Debounce suggestions
+      suggestionsTimeout = setTimeout(() => {
+        const chamados = loadChamados();
+        const urgencyLabels = { 'muito-alta': 'Muito Alta', 'alta': 'Alta', 'media': 'M\u00e9dia', 'baixa': 'Baixa', 'muito-baixa': 'Muito Baixa' };
+
+        // Buscar chamados que têm o número como parte, ou local, ou problema similar
+        const matches = chamados.filter(c => {
+          return (
+            String(c.numero).includes(query) ||
+            c.local.toLowerCase().includes(query) ||
+            c.problem.toLowerCase().includes(query)
+          );
+        }).slice(0, 8); // Limitar a 8 sugestões
+
+        if (matches.length > 0) {
+          showSuggestions(matches, urgencyLabels);
+        } else {
+          hideSuggestions();
+        }
+      }, 200);
+    });
+
+    function showSuggestions(chamados, urgencyLabels) {
+      const html = chamados.map(c => `
+        <div class="suggestion-item" data-id="${c.id}" onclick="selectSuggestion(${c.id})">
+          <span class="suggestion-number">#${escapeHtml(c.numero)}</span>
+          <span class="suggestion-local">${escapeHtml(c.local)}</span>
+          <span class="suggestion-problem">${escapeHtml(c.problem)}</span>
+          <div class="suggestion-meta">
+            <span class="urgency-badge urgency-${c.urgency || 'media'}">${urgencyLabels[c.urgency] || 'M\u00e9dia'}</span>
+            <span class="chamado-status ${c.status}">${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</span>
+          </div>
+        </div>
+      `).join('');
+
+      searchSuggestions.innerHTML = html;
+      searchSuggestions.classList.add('show');
+    }
+
+    function hideSuggestions() {
+      searchSuggestions.classList.remove('show');
+      searchSuggestions.innerHTML = '';
+    }
+
+    // Select a suggestion - preenche a caixa e executa a busca automaticamente
+    window.selectSuggestion = function(id) {
+      const chamados = loadChamados();
+      const item = chamados.find(c => c.id === id);
+      if (item) {
+        searchInput.value = item.numero;  // Preenche o número do chamado na caixa
+        hideSuggestions();
+        performSearch(item.numero.toString());  // Executa a busca automaticamente
+        // Destacar o chamado encontrado na lista
+        setTimeout(() => {
+          const el = document.getElementById(`chamado-${id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.animation = 'pulse 0.5s ease-out';
+          }
+        }, 150);
+      }
+    };
+
+    // Botão BUSCAR - buscar pelo número digitado
+    searchBtn.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        hideSuggestions();
+        performSearch(query);
+      }
+    });
+
+    // Também buscar ao pressionar Enter
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+          hideSuggestions();
+          performSearch(query);
+        }
+      }
+      // Navegar sugestões com setas
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        navigateSuggestions(e.key === 'ArrowDown' ? 1 : -1);
+        e.preventDefault();
+      }
+      // Selecionar com Enter nas sugestões
+      if (e.key === 'Enter') {
+        const selected = searchSuggestions.querySelector('.selected');
+        if (selected) {
+          selectSuggestion(selected.dataset.id);
+          e.preventDefault();
+        }
+      }
+      // Fechar com Escape
+      if (e.key === 'Escape') {
+        hideSuggestions();
+      }
+    });
+
+    function navigateSuggestions(direction) {
+      const items = searchSuggestions.querySelectorAll('.suggestion-item');
+      if (items.length === 0) return;
+
+      const current = searchSuggestions.querySelector('.selected');
+      let targetIndex = 0;
+
+      if (current) {
+        current.classList.remove('selected');
+        targetIndex = Array.from(items).indexOf(current) + direction;
+        if (targetIndex < 0) targetIndex = items.length - 1;
+        if (targetIndex >= items.length) targetIndex = 0;
+      }
+
+      items[targetIndex].classList.add('selected');
+      items[targetIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function performSearch(query) {
+      const chamados = loadChamados();
+      const list = document.getElementById('chamadoList');
+      const urgencyLabels = { 'muito-alta': 'Muito Alta', 'alta': 'Alta', 'media': 'M\u00e9dia', 'baixa': 'Baixa', 'muito-baixa': 'Muito Baixa' };
+
+      // Busca filtrada por número, local ou problema
+      const filtered = chamados.filter(c => {
+        // Aplicar filtro de status atual
+        if (currentFilter !== 'todos' && c.status !== currentFilter) return false;
+        // Buscar por número, local ou problema
+        return (
+          String(c.numero).includes(query) ||
+          c.local.toLowerCase().includes(query) ||
+          c.problem.toLowerCase().includes(query)
+        );
+      });
+
+      document.getElementById('totalCount').textContent = chamados.length;
+      document.getElementById('todoCount').textContent = chamados.filter(c => c.status === 'a-fazer').length;
+      document.getElementById('doneCount').textContent = chamados.filter(c => c.status === 'concluido').length;
+
+      // Scroll ao topo da lista
+      list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="list-empty">Nenhum chamado encontrado para essa busca.</div>';
+        return;
+      }
+
+      // Renderizar resultados buscados
+      list.innerHTML = filtered.map(c => `
+        <div class="chamado-item ${c.status}" id="chamado-${c.id}">
+          <div class="chamado-info">
+            <div class="chamado-title ${c.status}">${escapeHtml(c.problem)}</div>
+            <div class="chamado-date">
+              Chamado #${escapeHtml(c.numero)} &bull; Local: ${escapeHtml(c.local)}
+              &bull; <strong style="color:${REGION_COLORS[c.regiao]||'#94a3b8'}">${c.regiao || 'N/A'}</strong>
+            </div>
+            <div class="chamado-date">Modificado em: ${formatDate(c.modifiedAt)}</div>
+          </div>
+          <span class="urgency-badge urgency-${c.urgency || 'media'}">${urgencyLabels[c.urgency] || 'M\u00e9dia'}</span>
+          <span class="chamado-status ${c.status}">${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</span>
+          <div class="chamado-actions">
+            <button class="btn btn-edit" onclick="editChamado('${c.id}')">Editar</button>
+            <button class="btn btn-toggle ${c.status === 'concluido' ? 'done' : ''}" onclick="toggleChamado('${c.id}')">
+              ${c.status === 'concluido' ? 'Reabrir' : 'Concluir'}
+            </button>
+            <button class="btn btn-danger" onclick="deleteChamado('${c.id}')">Excluir</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Fechar sugestões ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+        hideSuggestions();
+      }
+    });
+
+    // ============ WEATHER (Open-Meteo) ============
+    const WMO_CODES = {
+      0: ['Céu limpo', '☀️'], 1: ['Predominantemente limpo', '🌤️'], 2: ['Parcialmente nublado', '⛅'],
+      3: ['Nublado', '☁️'], 45: ['Neblina', '🌫️'], 48: ['Neblina com geada', '🌫️'],
+      51: ['Garoa leve', '🌦️'], 53: ['Garoa moderada', '🌦️'], 55: ['Garoa intensa', '🌧️'],
+      56: ['Garoa gelada leve', '🧊'], 57: ['Garoa gelada intensa', '🧊'],
+      61: ['Chuva leve', '🌧️'], 63: ['Chuva moderada', '🌧️'], 65: ['Chuva forte', '⛈️'],
+      66: ['Chuva gelada leve', '🧊'], 67: ['Chuva gelada forte', '🧊'],
+      71: ['Neve leve', '❄️'], 73: ['Neve moderada', '❄️'], 75: ['Neve intensa', '❄️'],
+      77: ['Grãos de neve', '❄️'], 80: ['Pancadas leves', '🌦️'],
+      81: ['Pancadas moderadas', '🌧️'], 82: ['Pancadas fortes', '⛈️'],
+      85: ['Neve leve', '🌨️'], 86: ['Neve intensa', '🌨️'],
+      95: ['Trovoada', '⛈️'], 96: ['Trovoada com granizo leve', '⛈️'], 99: ['Trovoada com granizo forte', '⛈️']
+    };
+
+    // Cache para weather (15 minutos)
+    let weatherCache = null;
+    let weatherCacheTime = 0;
+
+    function fetchWeather(lat, lon) {
+      const now = Date.now();
+      // Se cache for válido (menos de 15 min), usar cache
+      if (weatherCache && (now - weatherCacheTime < 15 * 60 * 1000)) {
+        updateWeatherDisplay(weatherCache);
+        return;
+      }
+
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`)
+        .then(r => {
+          if (!r.ok) throw new Error('Weather API error');
+          return r.json();
+        })
+        .then(data => {
+          if (!data.current) throw new Error('No current data');
+          weatherCache = data.current;
+          weatherCacheTime = Date.now();
+          updateWeatherDisplay(data.current);
+        })
+        .catch(err => {
+          console.warn('Weather fetch failed:', err);
+          // Fallback: clima local simulado se falhar API
+          document.getElementById('weatherIcon').textContent = '🌤️';
+          document.getElementById('weatherTemp').textContent = '--°C';
+          document.getElementById('weatherDesc').textContent = 'Clima indisponível';
+          document.getElementById('weatherLocation').textContent = 'Maracaju-MS';
+        });
+    }
+
+    function updateWeatherDisplay(w) {
+      const [desc, icon] = WMO_CODES[w.weather_code] || ['Desconhecido', '❓'];
+      document.getElementById('weatherIcon').textContent = icon;
+      document.getElementById('weatherTemp').textContent = `${Math.round(w.temperature_2m)}°C`;
+      document.getElementById('weatherDesc').textContent = desc;
+      document.getElementById('weatherLocation').textContent = `Umidade ${w.relative_humidity_2m}% • Vento ${Math.round(w.wind_speed_10m)} km/h`;
+    }
+
+    function initWeather() {
+      // Coordenadas de Maracaju-MS (aproximadas)
+      const MARACAJU_LAT = -20.4511;
+      const MARACAJU_LON = -54.9297;
+
+      fetchWeather(MARACAJU_LAT, MARACAJU_LON);
+
+      // Atualizar a cada 15 minutos
+      setInterval(() => {
+        fetchWeather(MARACAJU_LAT, MARACAJU_LON);
+      }, 15 * 60 * 1000);
+    }
+
+    // ============ CLOCK ============
+    const DIAS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    function updateClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hh}:${mm}:${ss}`;
+      document.getElementById('dateDisplay').textContent =
+        `${DIAS[now.getDay()]}, ${now.getDate()} de ${MESES[now.getMonth()]} de ${now.getFullYear()}`;
+    }
+
+    // ============ CALENDAR ============
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+    let selectedDay = new Date().getDate();
+
+    const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    // Fixed holidays [month (0-idx), day, name]
+    const FIXED_HOLIDAYS = [
+      [0, 1, 'Confraternização Universal'],
+      [0, 6, 'Dia de Reis'],
+      [2, 8, 'Dia Internacional da Mulher'],
+      [2, 15, 'Tiradentes'],
+      [4, 1, 'Dia do Trabalho'],
+      [5, 12, 'Dia dos Namorados'],
+      [5, 24, 'São João'],
+      [8, 7, 'Independência do Brasil'],
+      [9, 12, 'Dia das Crianças'],
+      [9, 15, 'Dia do Professor'],
+      [9, 31, 'Dia das Bruxas (Halloween)'],
+      [10, 2, 'Finados'],
+      [10, 15, 'Proclamação da República'],
+      [10, 20, 'Dia da Consciência Negra'],
+      [11, 25, 'Natal']
+    ];
+
+    // Find the Nth day-of-week of a month (0=Sun)
+    function nthDayOfMonth(month, dayOfWeek, occurrence, year) {
+      const d = new Date(year, month, 1);
+      let count = 0;
+      while (d.getMonth() === month) {
+        if (d.getDay() === dayOfWeek) { count++; if (count === occurrence) return d; }
+        d.setDate(d.getDate() + 1);
+      }
+      return d;
+    }
+
+    // Calculate Easter (computus)
+    function getEaster(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(year, month, day);
+    }
+
+    // Generate movable holidays for a given year
+    function getMovableHolidays(year) {
+      const easter = getEaster(year);
+      const movable = [];
+      const addFromEaster = (days, name) => {
+        const d = new Date(easter); d.setDate(d.getDate() + days);
+        movable.push([d.getMonth(), d.getDate(), name]);
+      };
+      const addNthWeekday = (month, dow, n, name) => {
+        const d = nthDayOfMonth(month, dow, n, year);
+        movable.push([d.getMonth(), d.getDate(), name]);
+      };
+
+      // Easter-related
+      addFromEaster(-47, 'Carnaval');
+      addFromEaster(-46, 'Carnaval (Terça)');
+      addFromEaster(-45, 'Quarta-feira de Cinzas');
+      addFromEaster(-2, 'Sexta-feira Santa');
+      addFromEaster(0, 'Páscoa');
+      addFromEaster(60, 'Corpus Christi');
+
+      // Mother's Day - 2nd Sunday of May
+      addNthWeekday(4, 0, 2, 'Dia das Mães');
+      // Father's Day - 2nd Sunday of August
+      addNthWeekday(7, 0, 2, 'Dia dos Pais');
+
+      // American Thanksgiving - 4th Thursday of November
+      const agD = nthDayOfMonth(10, 4, 4, year);
+      movable.push([agD.getMonth(), agD.getDate(), 'Ação de Graças']);
+
+      // Black Friday (day after Thanksgiving)
+      const bfD = new Date(agD); bfD.setDate(bfD.getDate() + 1);
+      movable.push([bfD.getMonth(), bfD.getDate(), 'Black Friday']);
+
+      // Dia do Servidor Público: 28/out
+      movable.push([9, 28, 'Dia do Servidor Público']);
+
+      return movable;
+    }
+
+    // Get holidays for a specific date (month 0-indexed, day)
+    function getHolidaysForDate(month, day) {
+      const results = [];
+      FIXED_HOLIDAYS.forEach(([m, d, name]) => {
+        if (m === month && d === day) results.push(name);
+      });
+      const movable = getMovableHolidays(calYear);
+      movable.forEach(([m, d, name]) => {
+        if (m === month && d === day) results.push(name);
+      });
+      return results;
+    }
+
+    // Check if date is a holiday (fast check)
+    function isHoliday(year, month, day) {
+      // Fixed
+      for (const [m, d] of FIXED_HOLIDAYS) {
+        if (m === month && d === day) return true;
+      }
+      // Movable
+      const movable = getMovableHolidays(year);
+      for (const [m, d] of movable) {
+        if (m === month && d === day) return true;
+      }
+      return false;
+    }
+
+    function initCalendarSelects() {
+      const yearSel = document.getElementById('calYearSelect');
+      const monthSel = document.getElementById('calMonthSelect');
+      const currentY = new Date().getFullYear();
+      yearSel.innerHTML = '';
+      for (let y = currentY - 20; y <= currentY + 20; y++) {
+        yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+      }
+      yearSel.value = calYear;
+      monthSel.innerHTML = MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+      monthSel.value = calMonth;
+    }
+
+    function calPrevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+    function calNextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+    function calPrevYear() { calYear--; initCalendarSelects(); renderCalendar(); }
+    function calNextYear() { calYear++; initCalendarSelects(); renderCalendar(); }
+    function calGoYear(v) { calYear = parseInt(v); renderCalendar(); }
+    function calGoMonth(v) { calMonth = parseInt(v); renderCalendar(); }
+    function calGoToday() {
+      const today = new Date();
+      calYear = today.getFullYear();
+      calMonth = today.getMonth();
+      selectedDay = today.getDate();
+      initCalendarSelects();
+      renderCalendar();
+      showHolidays(today.getMonth(), today.getDate());
+    }
+
+    function showHolidays(month, day) {
+      const holidays = getHolidaysForDate(month, day);
+      const title = document.getElementById('holidayTitle');
+      const list = document.getElementById('holidayList');
+      const dateStr = `${day} de ${MONTH_NAMES[month]} de ${calYear}`;
+      const urgencyLabels = { 'muito-alta': 'Muito Alta', 'alta': 'Alta', 'media': 'M\u00e9dia', 'baixa': 'Baixa', 'muito-baixa': 'Muito Baixa' };
+
+      // Buscar chamados do dia
+      const dayChamados = loadChamados().filter(c => {
+        const d = new Date(c.modifiedAt);
+        return d.getFullYear() === calYear && d.getMonth() === month && d.getDate() === day;
+      });
+
+      const itemCount = dayChamados.length;
+      title.textContent = itemCount > 0 ? `${dateStr} — ${itemCount} chamado(s)` : `${dateStr} — Sem chamados`;
+
+      let html = '';
+
+      // Feriados
+      if (holidays.length > 0) {
+        html += holidays.map(h =>
+          `<li class="holiday-list-item" style="color:#f59e0b; font-weight:600; padding:0.25rem 0.5rem; display:flex; align-items:center; gap:0.3rem">
+            <span>★</span> ${escapeHtml(h)}
+          </li>`
+        ).join('');
+      }
+
+      // Chamados do dia
+      if (dayChamados.length > 0) {
+        dayChamados.forEach(c => {
+          const regionColor = REGION_COLORS[c.regiao] || '#94a3b8';
+          html += `
+            <li class="calendar-chamado-item" style="
+              padding:0.35rem 0.5rem;
+              margin:0.2rem 0;
+              border-left:3px solid ${regionColor};
+              background:rgba(255,255,255,0.04);
+              border-radius:0 4px 4px 0;
+              display:flex;
+              align-items:center;
+              gap:0.4rem;
+              font-size:0.75rem
+            ">
+              <span class="urgency-badge urgency-${c.urgency || 'media'}" style="font-size:0.6rem">${urgencyLabels[c.urgency]||'Média'}</span>
+              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
+                #${escapeHtml(c.numero)} — ${escapeHtml(c.problem.substring(0,45))}
+              </span>
+              <span style="font-size:0.65rem; color:${c.status==='concluido'?'#4ade80':'#fbbf24'}">
+                ${c.status==='concluido'?'✓':'○'}
+              </span>
+            </li>`;
+        });
+      }
+
+      if (!html) {
+        html = '<li style="padding:0.25rem 0.5rem; color:#64748b"><span class="h-icon">○</span> Nenhum chamado registrado</li>';
+      }
+
+      list.innerHTML = `<ul style="list-style:none; padding:0; margin:0">${html}</ul>`;
+    }
+
+    function renderCalendar() {
+      const daysEl = document.getElementById('calDays');
+      const label = document.getElementById('calMonthYear');
+      label.textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+      document.getElementById('calYearSelect').value = calYear;
+      document.getElementById('calMonthSelect').value = calMonth;
+
+      const first = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const today = new Date();
+      const chamadoDays = getChamadoDatesByDay();
+      const movableHolidays = getMovableHolidays(calYear); // Usado apenas se necessário
+
+      let html = '';
+      // Previous month days
+      const prevMonthDays = new Date(calYear, calMonth, 0).getDate();
+      for (let i = first - 1; i >= 0; i--) {
+        html += `<div class="day other-month">${prevMonthDays - i}</div>`;
+      }
+      // Current month
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+        const key = `${calYear}-${calMonth}-${d}`;
+        const hasChamado = chamadoDays[key] ? 'has-chamado' : '';
+        const holiday = isHoliday(calYear, calMonth, d);
+        const holidayClass = holiday ? 'holiday' : '';
+        const date = new Date(calYear, calMonth, d);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const weekendClass = isWeekend && !isToday ? 'weekend' : '';
+        const isSelected = d === selectedDay ? 'selected' : '';
+
+        // Contar chamados do dia
+        const dayChamadosCount = loadChamados().filter(c => {
+          const cd = new Date(c.modifiedAt);
+          return cd.getFullYear() === calYear && cd.getMonth() === calMonth && cd.getDate() === d;
+        }).length;
+
+        let titleAttr = '';
+        let extraClass = '';
+        if (holiday) {
+          const hn = getHolidaysForDate(calMonth, d);
+          titleAttr = `title="${hn.join(', ')}"`;
+          extraClass = ' holiday';
+        }
+        if (dayChamadosCount > 0) {
+          extraClass += ' has-chamados-count';
+        }
+
+        let dayContent = d;
+        if (holiday) dayContent += '<span class="day-dot"></span>';
+        if (dayChamadosCount > 0) {
+          dayContent += `<span class="chamado-count" style="
+            display:inline-block;
+            font-size:0.5rem;
+            margin-top:1px;
+            color:#38bdf8;
+            font-weight:bold">●</span>`;
+        }
+
+        html += `<div class="day${isToday ? ' today' : ''}${extraClass}${isSelected ? ' selected' : ''}"
+          ${titleAttr}
+          onclick="showHolidays(${calMonth}, ${d})">${dayContent}</div>`;
+      }
+      // Next month
+      const totalCells = first + daysInMonth;
+      const remaining = (7 - (totalCells % 7)) % 7;
+      for (let i = 1; i <= remaining; i++) {
+        html += `<div class="day other-month">${i}</div>`;
+      }
+      daysEl.innerHTML = html;
+    }
+
+    // ============ EXPORT ============
+    const URGENCY_LABELS = { 'muito-alta': 'Muito Alta', 'alta': 'Alta', 'media': 'M\u00e9dia', 'baixa': 'Baixa', 'muito-baixa': 'Muito Baixa' };
+    const FILTER_LABELS = { 'todos': 'Todos', 'a-fazer': 'A Fazer', 'concluido': 'Conclu\u00eddos' };
+
+    function exportWord() {
+      const chamados = loadChamados().filter(c => currentFilter === 'todos' || c.status === currentFilter);
+      if (chamados.length === 0) return alert('Nenhum chamado para exportar.');
+      const suffix = currentFilter !== 'todos' ? '_' + FILTER_LABELS[currentFilter].replace(/\s/g, '_') : '';
+      const rows = chamados.map((c, i) =>
+        `<tr><td>${i+1}</td><td>${escapeHtml(c.numero)}</td><td>${escapeHtml(c.local)}</td><td>${escapeHtml(c.problem)}</td><td>${escapeHtml(c.regiao || 'N/A')}</td><td>${URGENCY_LABELS[c.urgency] || ''}</td><td>${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</td><td>${formatDate(c.modifiedAt)}</td></tr>`
+      ).join('');
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8">
+        <style>table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif}th,td{border:1px solid #ccc;padding:8px 10px;text-align:left}th{background:#2b579a;color:#fff}h2{color:#2b579a}</style>
+        </head><body><h2>Gerenciador de Chamados — ${FILTER_LABELS[currentFilter]}</h2><table><tr><th>#</th><th>N\u00famero</th><th>Local</th><th>Problema</th><th>Regi\u00e3o</th><th>Urg\u00eancia</th><th>Status</th><th>Data Mods.</th></tr>${rows}</table></body></html>`;
+      downloadFile(html, `chamados${suffix}.doc`, 'application/msword');
+    }
+
+    function exportExcel() {
+      const chamados = loadChamados().filter(c => currentFilter === 'todos' || c.status === currentFilter);
+      if (chamados.length === 0) return alert('Nenhum chamado para exportar.');
+      const suffix = currentFilter !== 'todos' ? '_' + FILTER_LABELS[currentFilter].replace(/\s/g, '_') : '';
+      const rows = chamados.map((c, i) =>
+        `<Row><Cell><Data ss:Type="Number">${i+1}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.numero)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.local)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.problem)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.regiao || 'N/A')}</Data></Cell><Cell><Data ss:Type="String">${URGENCY_LABELS[c.urgency] || ''}</Data></Cell><Cell><Data ss:Type="String">${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</Data></Cell><Cell><Data ss:Type="String">${formatDate(c.modifiedAt)}</Data></Cell></Row>`
+      ).join('');
+      const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Chamados"><Table><Column ss:Width="40"/><Column ss:Width="80"/><Column ss:Width="120"/><Column ss:Width="260"/><Column ss:Width="90"/><Column ss:Width="80"/><Column ss:Width="140"/>
+<Row><Cell><Data ss:Type="String">#</Data></Cell><Cell><Data ss:Type="String">N\u00famero</Data></Cell><Cell><Data ss:Type="String">Local</Data></Cell><Cell><Data ss:Type="String">Problema</Data></Cell><Cell><Data ss:Type="String">Regi\u00e3o</Data></Cell><Cell><Data ss:Type="String">Urg\u00eancia</Data></Cell><Cell><Data ss:Type="String">Status</Data></Cell><Cell><Data ss:Type="String">Data Mods.</Data></Cell></Row>${rows}</Table></Worksheet></Workbook>`;
+      downloadFile(xml, `chamados${suffix}.xls`, 'application/vnd.ms-excel');
+    }
+
+    function escapeXml(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob(['\ufeff' + content], { type: mime + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // ============ MARACAJU REGION MAP ============
+    // Mapa interativo das regioes de Maracaju-MS
+
+    const REGION_COLORS = {
+      'Norte': '#ef4444',
+      'Sul': '#22c55e',
+      'Leste': '#3b82f6',
+      'Oeste': '#f59e0b',
+      'Centro': '#8b5cf6'
+    };
+
+    // Palavras-chave para detecção automática de região (bairros de Maracaju-MS)
+    const REGION_KEYWORDS = {
+      'Norte': ['norte', 'jardim norte', 'vila nova', 'alto da colina', 'panambi', 'são joão', 'jardim são pedro norte'],
+      'Sul': ['sul', 'jardim sul', 'são pedro', 'rocha', 'silva', 'tarumã', 'paranavaí', 'balneario', 'jardim São Pedro', 'vila São Pedro'],
+      'Leste': ['leste', 'progresso', 'esperança', 'vitória', 'euro americano', 'euro-americano', 'povoado', 'jardim leste'],
+      'Oeste': ['oeste', 'bonfim', 'morena', 'cidade morena', 'jardim morena', 'jardim oeste', 'panambi', 'vila oeste'],
+      'Centro': ['centro', 'pardim', 'matriz', 'bela vista', 'jardim getúlio', 'presidente', 'getúlio', 'jardim presidentes']
+    };
+
+    // Polígonos SVG simplificados para representar as regiões
+    const REGION_BOAROS = {
+      'Norte': ['Jardim Norte', 'Vila Nova', 'Alto da Colina', 'Panambi', 'São João', 'Jardim São Pedro Norte'],
+      'Sul': ['Jardim Sul', 'Vila São Pedro', 'São Pedro', 'Rocha', 'Silva', 'Tarumã', 'Paranavaí', 'Balneário'],
+      'Leste': ['Jardim Leste', 'Progresso', 'Esperança', 'Vitória', 'Euro-Americano', 'Povoado'],
+      'Oeste': ['Jardim Oeste', 'Bonfim', 'Cidade Morena', 'Jardim Morena', 'Vila Oeste'],
+      'Centro': ['Centro', 'Pardim', 'Matriz', 'Bela Vista', 'Jardim Getúlio', 'Presidente', 'Jardim Presidentes']
+    };
+
+    const REGION_POLYGONS = {
+      'Norte': { points: '50,5 95,5 95,45 50,45', name: 'Região Norte' },
+      'Sul': { points: '5,55 50,55 50,95 5,95', name: 'Região Sul' },
+      'Leste': { points: '50,5 95,5 95,95 50,55', name: 'Região Leste' },
+      'Oeste': { points: '5,5 50,5 50,95 5,95', name: 'Região Oeste' },
+      'Centro': { points: '45,45 55,45 55,55 45,55', name: 'Centro' }
+    };
+
+    // Detectar região baseada no nome do local (bairro)
+    function detectRegionFromLocal(local) {
+      if (!local) return 'Centro';
+      const l = local.toLowerCase().trim();
+      for (const [region, keywords] of Object.entries(REGION_KEYWORDS)) {
+        for (const kw of keywords) {
+          if (l.includes(kw.toLowerCase())) return region;
+        }
+      }
+      // Se não encontrar, verifica se tem palavra "centro"
+      if (l.includes('centro')) return 'Centro';
+      return 'Centro'; // default
+    }
+
+    function drawMaracajuMap() {
+      const mapEl = document.getElementById('maracajuMap');
+      if (!mapEl) return;
+
+      let svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;">
+        <defs>
+          <filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.5" flood-opacity="0.3"/>
+          </filter>
+        </defs>`;
+
+      // Desenhar cada região
+      const regions = ['Norte','Sul','Leste','Oeste','Centro'];
+      regions.forEach((region) => {
+        const color = REGION_COLORS[region];
+        const r = REGION_POLYGONS[region];
+        const opacity = region === 'Centro' ? 0.85 : 0.55;
+        const stroke = region === 'Centro' ? '#fff' : 'rgba(255,255,255,0.25)';
+        const bairros = REGION_BOAROS[region] || [];
+
+        // Calcular centro do polígono
+        const pointsList = r.points.split(' ').map(p => p.split(',').map(Number));
+        const cx = pointsList.reduce((sum, p) => sum + p[0], 0) / pointsList.length;
+        const cy = pointsList.reduce((sum, p) => sum + p[1], 0) / pointsList.length;
+
+        const bairrosText = bairros.length > 0 ? `\nBairros: ${bairros.join(', ')}` : '';
+
+        svg += `
+          <polygon points="${r.points}"
+            fill="${color}" fill-opacity="${opacity}"
+            stroke="${stroke}" stroke-width="${region === 'Centro' ? 2 : 0.5}"
+            data-region="${region}"
+            data-bairros="${bairros.join('|')}"
+            style="cursor: pointer; transition: all 0.15s ease; filter: url(#mapShadow);"
+            onmouseover="showMapTooltip('${region}', '${bairros.join(', ')}')"
+            onmouseout="hideMapTooltip()"
+            onclick="highlightRegion('${region}')"
+          />`;
+
+        // Label da região
+        svg += `<text x="${cx}" y="${cy}" class="region-title">${region}</text>`;
+      });
+
+      // Tooltip flutuante
+      svg += `<foreignObject x="0" y="0" width="100" height="100" pointer-events="none">
+        <div id="mapTooltip" style="
+          position: absolute;
+          background: rgba(15, 23, 42, 0.95);
+          color: #e2e8f0;
+          padding: 6px 10px;
+          border-radius: 6px;
+          font-size: 10px;
+          border: 1px solid #334155;
+          display: none;
+          z-index: 50;
+          max-width: 200px;
+          text-align: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        "></div>
+      </foreignObject>`;
+
+      svg += '</svg>';
+      mapEl.innerHTML = svg;
+    }
+
+    window.highlightRegion = function(region) {
+      const regionDetected = document.getElementById('region-detected');
+      regionDetected.textContent = `Região selecionada: ${region}`;
+      regionDetected.style.color = REGION_COLORS[region];
+    };
+
+    // Tooltip do mapa
+    window.showMapTooltip = function(region, bairros) {
+      const mapEl = document.getElementById('maracajuMap');
+      const tooltip = document.getElementById('mapTooltip');
+      if (tooltip && mapEl) {
+        const rect = mapEl.getBoundingClientRect();
+        tooltip.innerHTML = `<strong style="color:${REGION_COLORS[region]}">${region}</strong><br>${bairros}`;
+        tooltip.style.display = 'block';
+        tooltip.style.left = '10px';
+        tooltip.style.top = '10px';
+      }
+    };
+
+    window.hideMapTooltip = function() {
+      const tooltip = document.getElementById('mapTooltip');
+      if (tooltip) tooltip.style.display = 'none';
+    };
+
+    // Renderizar mapa
+    setTimeout(() => drawMaracajuMap(), 100);
+    window.addEventListener('resize', () => {
+      drawMaracajuMap();
+    });
+
+    // Adicionar região ao adicionar/editar chamado
+    document.getElementById('chamadoForm').addEventListener('submit', e => {
+      const numero = document.getElementById('chamadoNumero').value.trim();
+      const local = document.getElementById('chamadoLocal').value.trim();
+      const problema = document.getElementById('chamadoProblema').value.trim();
+      const urgencia = document.getElementById('chamadoUrgencia').value;
+
+      if (!numero || !local || !problema) return;
+
+      const regiao = detectRegionFromLocal(local);
+
+      const chamados = loadChamados();
+      chamados.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        numero, local, problem: problema, status: 'a-fazer', urgency: urgencia,
+        regiao: regiao,
+        modifiedAt: new Date().toISOString()
+      });
+      saveChamados(chamados);
+
+      const regionDetected = document.getElementById('region-detected');
+      if (regionDetected) {
+        regionDetected.textContent = `✓ Chamado adicionado na região ${regiao}`;
+        regionDetected.style.color = REGION_COLORS[regiao];
+      }
+
+      document.getElementById('chamadoNumero').value = '';
+      document.getElementById('chamadoLocal').value = '';
+      document.getElementById('chamadoProblema').value = '';
+      document.getElementById('chamadoUrgencia').value = 'media';
+      renderChamados();
+    });
+
+    function renderChamados() {
+      const chamados = loadChamados();
+      const list = document.getElementById('chamadoList');
+      const query = document.getElementById('searchInput')?.value.toLowerCase() || '';
+
+      const urgencyLabels = { 'muito-alta': 'Muito Alta', 'alta': 'Alta', 'media': 'M\u00e9dia', 'baixa': 'Baixa', 'muito-baixa': 'Muito Baixa' };
+
+      const filtered = chamados.filter(c => {
+        if (currentFilter !== 'todos' && c.status !== currentFilter) return false;
+        if (query) {
+          const searchIn = `${c.numero} ${c.local} ${c.problem} ${urgencyLabels[c.urgency] || ''}`.toLowerCase();
+          return searchIn.includes(query);
+        }
+        return true;
+      });
+
+      document.getElementById('totalCount').textContent = chamados.length;
+      document.getElementById('todoCount').textContent = chamados.filter(c => c.status === 'a-fazer').length;
+      document.getElementById('doneCount').textContent = chamados.filter(c => c.status === 'concluido').length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="list-empty">Nenhum chamado encontrado.</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(c => `
+        <div class="chamado-item ${c.status}">
+          <div class="chamado-info">
+            <div class="chamado-title ${c.status}">${escapeHtml(c.problem)}</div>
+            <div class="chamado-date">
+              Chamado #${escapeHtml(c.numero)} &bull; Local: ${escapeHtml(c.local)}
+              &bull; <strong style="color:${REGION_COLORS[c.regiao]||'#94a3b8'}">${c.regiao || 'N/A'}</strong>
+            </div>
+            <div class="chamado-date">Modificado em: ${formatDate(c.modifiedAt)}</div>
+          </div>
+          <span class="urgency-badge urgency-${c.urgency || 'media'}">${urgencyLabels[c.urgency] || 'M\u00e9dia'}</span>
+          <span class="chamado-status ${c.status}">${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</span>
+          <div class="chamado-actions">
+            <button class="btn btn-edit" onclick="editChamado('${c.id}')">Editar</button>
+            <button class="btn btn-toggle ${c.status === 'concluido' ? 'done' : ''}" onclick="toggleChamado('${c.id}')">
+              ${c.status === 'concluido' ? 'Reabrir' : 'Concluir'}
+            </button>
+            <button class="btn btn-danger" onclick="deleteChamado('${c.id}')">Excluir</button>
+          </div>
+        </div>
+      `).join('');
+
+      renderCalendar();
+    }
+
+    // Atualizar chamado ao editar
+    document.getElementById('editForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const numero = document.getElementById('editNumero').value.trim();
+      const local = document.getElementById('editLocal').value.trim();
+      const problema = document.getElementById('editProblema').value.trim();
+      const urgencia = document.getElementById('editUrgencia').value;
+      if (!numero || !local || !problema) return;
+
+      const chamados = loadChamados();
+      const item = chamados.find(c => c.id === id);
+      if (!item) return;
+
+      // Atualizar todos os campos
+      item.numero = numero;
+      item.local = local;
+      item.problem = problema;
+      item.urgency = urgencia;
+      // Recalcular região automaticamente com base no local
+      item.regiao = detectRegionFromLocal(local);
+      item.modifiedAt = new Date().toISOString();
+
+      saveChamados(chamados);
+      closeEditModal();
+      renderChamados();
+    });
+</body>
+</html>

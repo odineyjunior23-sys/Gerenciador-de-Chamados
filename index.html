@@ -536,6 +536,8 @@
         <button class="filter-btn active" data-filter="todos">Todos</button>
         <button class="filter-btn" data-filter="a-fazer">A Fazer</button>
         <button class="filter-btn" data-filter="pendente">Pendente</button>
+        <button class="btn btn-export-word" onclick="exportWordPendente()" style="margin-left: 0.4rem;" id="exportWordPendente">Exportar Word (Pendente)</button>
+        <button class="btn btn-export-excel" onclick="exportExcelPendente()" style="margin-left: 0.4rem;" id="exportExcelPendente">Exportar Excel (Pendente)</button>
         <button class="filter-btn" data-filter="concluido">Conclu&iacute;dos</button>
       </div>
 
@@ -548,8 +550,10 @@
       </div>
 
       <div class="export-bar">
-        <button class="btn btn-export-word" onclick="exportWord()">Exportar Word</button>
-        <button class="btn btn-export-excel" onclick="exportExcel()">Exportar Excel</button>
+        <button class="btn btn-export-word" onclick="exportWord()" style="margin-left: 0.4rem;" id="exportWordAll">Exportar Word</button>
+        <button class="btn btn-export-excel" onclick="exportExcel()" style="margin-left: 0.4rem;" id="exportExcelAll">Exportar Excel</button>
+        <button class="btn btn-export-word" onclick="exportWordPendente()" style="margin-left: 0.4rem;" id="exportWordPendente">Exportar Word (Pendente)</button>
+        <button class="btn btn-export-excel" onclick="exportExcelPendente()" style="margin-left: 0.4rem;" id="exportExcelPendente">Exportar Excel (Pendente)</button>
       </div>
 
       <div id="chamadoList"></div>
@@ -1016,21 +1020,49 @@
 
     // Fixed holidays [month (0-idx), day, name]
     const FIXED_HOLIDAYS = [
+      // Janeiro
       [0, 1, 'Confraternização Universal'],
       [0, 6, 'Dia de Reis'],
+      // Fevereiro
+      [1, 2, 'Dia da Candelária'],
+      // Março
       [2, 8, 'Dia Internacional da Mulher'],
       [2, 15, 'Tiradentes'],
+      [2, 25, 'Dia da Revolta da Vacina'],
+      // Abril
+      [3, 21, 'Tiradentes - Dia da Revolta da Vacina'],
+      // Maio
       [4, 1, 'Dia do Trabalho'],
+      // Junho
       [5, 12, 'Dia dos Namorados'],
+      [5, 13, 'Dia de Santo Antônio'],
       [5, 24, 'São João'],
+      // Julho
+      [6, 9, 'Revolução Constitucionalista de 1932'],
+      // Agosto
+      [7, 7, 'Independência do Brasil'],
+      [7, 15, 'Dia do Indígena'],
+      [7, 20, 'Dia do Soldado'],
+      // Setembro
       [8, 7, 'Independência do Brasil'],
-      [9, 12, 'Dia das Crianças'],
-      [9, 15, 'Dia do Professor'],
+      [8, 12, 'Dia das Crianças'],
+      [8, 15, 'Dia de Nossa Senhora da Conceição'],
+      [8, 19, 'Dia do Soldado'],
+      // Outubro
+      [9, 2, 'Finados'],
+      [9, 12, 'Dia de Nossa Senhora Aparecida'],
+      [9, 15, 'Proclamação da República'],
+      [9, 28, 'Dia do Servidor Público'],
       [9, 31, 'Dia das Bruxas (Halloween)'],
+      // Novembro
       [10, 2, 'Finados'],
       [10, 15, 'Proclamação da República'],
       [10, 20, 'Dia da Consciência Negra'],
-      [11, 25, 'Natal']
+      [10, 29, 'Dia da Reforma Ortográfica'],
+      // Dezembro
+      [11, 8, 'Dia da Imaculada Conceição'],
+      [11, 25, 'Natal'],
+      [11, 31, 'Véspera de Ano Novo']
     ];
 
     // Find the Nth day-of-week of a month (0=Sun)
@@ -1089,15 +1121,28 @@
       // Father's Day - 2nd Sunday of August
       addNthWeekday(7, 0, 2, 'Dia dos Pais');
 
-      // American Thanksgiving - 4th Thursday of November
-      const agD = nthDayOfMonth(10, 4, 4, year);
-      movable.push([agD.getMonth(), agD.getDate(), 'Ação de Graças']);
+      // Tiradantes - 21 de abril
+      movable.push([3, 21, 'Tiradentes']);
 
-      // Black Friday (day after Thanksgiving)
-      const bfD = new Date(agD); bfD.setDate(bfD.getDate() + 1);
-      movable.push([bfD.getMonth(), bfD.getDate(), 'Black Friday']);
+      // Dia das Mães - 2º domingo de maio
+      addNthWeekday(4, 0, 2, 'Dia das Mães');
 
-      // Dia do Servidor Público: 28/out
+      // Dia dos Pais - 2º domingo de agosto
+      addNthWeekday(7, 0, 2, 'Dia dos Pais');
+
+      // Dia da Criança - 12 de outubro
+      movable.push([9, 12, 'Dia das Crianças']);
+
+      // Dia dos Finados - 2 de novembro
+      movable.push([10, 2, 'Finados']);
+
+      // Dia de Nossa Senhora Aparecida - 12 de outubro
+      movable.push([9, 12, 'Dia de Nossa Senhora Aparecida']);
+
+      // Dia da Consciência Negra - 20 de novembro
+      movable.push([10, 20, 'Dia da Consciência Negra']);
+
+      // Dia do Servidor Público - 28 de outubro
       movable.push([9, 28, 'Dia do Servidor Público']);
 
       return movable;
@@ -1160,6 +1205,9 @@
     }
 
     function showHolidays(month, day) {
+      // Atualizar o dia selecionado
+      selectedDay = day;
+
       const holidays = getHolidaysForDate(month, day);
       const title = document.getElementById('holidayTitle');
       const list = document.getElementById('holidayList');
@@ -1218,6 +1266,9 @@
       }
 
       list.innerHTML = `<ul style="list-style:none; padding:0; margin:0">${html}</ul>`;
+
+      // Re-render o calendário para mostrar o destaque
+      renderCalendar();
     }
 
     function renderCalendar() {
@@ -1302,7 +1353,7 @@
       if (chamados.length === 0) return alert('Nenhum chamado para exportar.');
       const suffix = currentFilter !== 'todos' ? '_' + FILTER_LABELS[currentFilter].replace(/\s/g, '_') : '';
       const rows = chamados.map((c, i) =>
-        `<tr><td>${i+1}</td><td>${escapeHtml(c.numero)}</td><td>${escapeHtml(c.local)}</td><td>${escapeHtml(c.problem)}</td><td>${escapeHtml(c.regiao || 'N/A')}</td><td>${URGENCY_LABELS[c.urgency] || ''}</td><td>${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</td><td>${formatDate(c.modifiedAt)}</td></tr>`
+        `<tr><td>${i+1}</td><td>${escapeHtml(c.numero)}</td><td>${escapeHtml(c.local)}</td><td>${escapeHtml(c.problem)}</td><td>${escapeHtml(c.regiao || 'N/A')}</td><td>${URGENCY_LABELS[c.urgency] || ''}</td><td>${c.status === 'concluido' ? 'Conclu\u00eddo' : c.status === 'pendente' ? 'Pendente' : 'A Fazer'}</td><td>${formatDate(c.modifiedAt)}</td></tr>`
       ).join('');
       const html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -1317,13 +1368,41 @@
       if (chamados.length === 0) return alert('Nenhum chamado para exportar.');
       const suffix = currentFilter !== 'todos' ? '_' + FILTER_LABELS[currentFilter].replace(/\s/g, '_') : '';
       const rows = chamados.map((c, i) =>
-        `<Row><Cell><Data ss:Type="Number">${i+1}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.numero)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.local)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.problem)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.regiao || 'N/A')}</Data></Cell><Cell><Data ss:Type="String">${URGENCY_LABELS[c.urgency] || ''}</Data></Cell><Cell><Data ss:Type="String">${c.status === 'concluido' ? 'Conclu\u00eddo' : 'A Fazer'}</Data></Cell><Cell><Data ss:Type="String">${formatDate(c.modifiedAt)}</Data></Cell></Row>`
+        `<Row><Cell><Data ss:Type="Number">${i+1}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.numero)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.local)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.problem)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.regiao || 'N/A')}</Data></Cell><Cell><Data ss:Type="String">${URGENCY_LABELS[c.urgency] || ''}</Data></Cell><Cell><Data ss:Type="String">${c.status === 'concluido' ? 'Conclu\u00eddo' : c.status === 'pendente' ? 'Pendente' : 'A Fazer'}</Data></Cell><Cell><Data ss:Type="String">${formatDate(c.modifiedAt)}</Data></Cell></Row>`
       ).join('');
       const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
 <Worksheet ss:Name="Chamados"><Table><Column ss:Width="40"/><Column ss:Width="80"/><Column ss:Width="120"/><Column ss:Width="260"/><Column ss:Width="90"/><Column ss:Width="80"/><Column ss:Width="140"/>
 <Row><Cell><Data ss:Type="String">#</Data></Cell><Cell><Data ss:Type="String">N\u00famero</Data></Cell><Cell><Data ss:Type="String">Local</Data></Cell><Cell><Data ss:Type="String">Problema</Data></Cell><Cell><Data ss:Type="String">Regi\u00e3o</Data></Cell><Cell><Data ss:Type="String">Urg\u00eancia</Data></Cell><Cell><Data ss:Type="String">Status</Data></Cell><Cell><Data ss:Type="String">Data Mods.</Data></Cell></Row>${rows}</Table></Worksheet></Workbook>`;
       downloadFile(xml, `chamados${suffix}.xls`, 'application/vnd.ms-excel');
+    }
+
+    // Funções de exportação específicas para cada status
+    function exportWordPendente() {
+      const chamados = loadChamados().filter(c => c.status === 'pendente');
+      if (chamados.length === 0) return alert('Nenhum chamado pendente para exportar.');
+      const rows = chamados.map((c, i) =>
+        `<tr><td>${i+1}</td><td>${escapeHtml(c.numero)}</td><td>${escapeHtml(c.local)}</td><td>${escapeHtml(c.problem)}</td><td>${escapeHtml(c.regiao || 'N/A')}</td><td>${URGENCY_LABELS[c.urgency] || ''}</td><td>Pendente</td><td>${formatDate(c.modifiedAt)}</td></tr>`
+      ).join('');
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8">
+        <style>table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif}th,td{border:1px solid #ccc;padding:8px 10px;text-align:left}th{background:#f59e0b;color:#fff}h2{color:#f59e0b}</style>
+        </head><body><h2>Chamados Pendentes — ${chamados.length} registro(s)</h2><table><tr><th>#</th><th>N\u00famero</th><th>Local</th><th>Problema</th><th>Regi\u00e3o</th><th>Urg\u00eancia</th><th>Status</th><th>Data Mods.</th></tr>${rows}</table></body></html>`;
+      downloadFile(html, 'chamados_pendentes.doc', 'application/msword');
+    }
+
+    function exportExcelPendente() {
+      const chamados = loadChamados().filter(c => c.status === 'pendente');
+      if (chamados.length === 0) return alert('Nenhum chamado pendente para exportar.');
+      const rows = chamados.map((c, i) =>
+        `<Row><Cell><Data ss:Type="Number">${i+1}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.numero)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.local)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.problem)}</Data></Cell><Cell><Data ss:Type="String">${escapeXml(c.regiao || 'N/A')}</Data></Cell><Cell><Data ss:Type="String">${URGENCY_LABELS[c.urgency] || ''}</Data></Cell><Cell><Data ss:Type="String">Pendente</Data></Cell><Cell><Data ss:Type="String">${formatDate(c.modifiedAt)}</Data></Cell></Row>`
+      ).join('');
+      const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Chamados Pendentes"><Table><Column ss:Width="40"/><Column ss:Width="80"/><Column ss:Width="120"/><Column ss:Width="260"/><Column ss:Width="90"/><Column ss:Width="80"/><Column ss:Width="140"/>
+<Row><Cell><Data ss:Type="String">#</Data></Cell><Cell><Data ss:Type="String">N\u00famero</Data></Cell><Cell><Data ss:Type="String">Local</Data></Cell><Cell><Data ss:Type="String">Problema</Data></Cell><Cell><Data ss:Type="String">Regi\u00e3o</Data></Cell><Cell><Data ss:Type="String">Urg\u00eancia</Data></Cell><Cell><Data ss:Type="String">Status</Data></Cell><Cell><Data ss:Type="String">Data Mods.</Data></Cell></Row>${rows}</Table></Worksheet></Workbook>`;
+      downloadFile(xml, 'chamados_pendentes.xls', 'application/vnd.ms-excel');
     }
 
     function escapeXml(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }

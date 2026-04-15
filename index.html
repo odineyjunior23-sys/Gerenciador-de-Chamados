@@ -369,10 +369,11 @@
 
     .urgency-select {
       background: #0f172a; border: 1px solid #334155; color: #e2e8f0;
-      padding: 0.25rem 0.35rem; border-radius: 6px; font-size: 0.72rem;
-      font-family: inherit; cursor: pointer; transition: border-color 0.2s;
+      padding: 0.4rem 0.6rem; border-radius: 8px; font-size: 0.85rem;
+      font-family: inherit; cursor: pointer; transition: all 0.2s;
+      width: 100%;
     }
-    .urgency-select:focus { border-color: #38bdf8; outline: none; }
+    .urgency-select:focus { border-color: #38bdf8; outline: none; background: #1e293b; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
 
     .calendar-chamado-item {
       font-size: 0.7rem; color: #94a3b8; padding: 0.25rem 0.5rem;
@@ -442,7 +443,7 @@
         </div>
         <div class="form-group">
           <label for="editStatus">Status</label>
-          <select id="editStatus" required>
+          <select id="editStatus" class="urgency-select" required>
             <option value="a-fazer">A Fazer</option>
             <option value="pendente">Pendente</option>
             <option value="concluido">Concluído</option>
@@ -536,8 +537,6 @@
         <button class="filter-btn active" data-filter="todos">Todos</button>
         <button class="filter-btn" data-filter="a-fazer">A Fazer</button>
         <button class="filter-btn" data-filter="pendente">Pendente</button>
-        <button class="btn btn-export-word" onclick="exportWordPendente()" style="margin-left: 0.4rem;" id="exportWordPendente">Exportar Word (Pendente)</button>
-        <button class="btn btn-export-excel" onclick="exportExcelPendente()" style="margin-left: 0.4rem;" id="exportExcelPendente">Exportar Excel (Pendente)</button>
         <button class="filter-btn" data-filter="concluido">Conclu&iacute;dos</button>
       </div>
 
@@ -550,10 +549,8 @@
       </div>
 
       <div class="export-bar">
-        <button class="btn btn-export-word" onclick="exportWord()" style="margin-left: 0.4rem;" id="exportWordAll">Exportar Word</button>
-        <button class="btn btn-export-excel" onclick="exportExcel()" style="margin-left: 0.4rem;" id="exportExcelAll">Exportar Excel</button>
-        <button class="btn btn-export-word" onclick="exportWordPendente()" style="margin-left: 0.4rem;" id="exportWordPendente">Exportar Word (Pendente)</button>
-        <button class="btn btn-export-excel" onclick="exportExcelPendente()" style="margin-left: 0.4rem;" id="exportExcelPendente">Exportar Excel (Pendente)</button>
+        <button class="btn btn-export-word" onclick="exportWordPendente()" style="margin-left: 0.4rem;" id="exportWordAll">Exportar Word</button>
+        <button class="btn btn-export-excel" onclick="exportExcelPendente()" style="margin-left: 0.4rem;" id="exportExcelAll">Exportar Excel</button>
       </div>
 
       <div id="chamadoList"></div>

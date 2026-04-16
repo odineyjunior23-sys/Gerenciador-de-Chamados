@@ -1,0 +1,3 @@
+// supabase.config.js
+export const supabaseUrl = 'https://lwvijwdbpuovkhxgkqpq.supabase.co';
+export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3dmlqd2RicHVvdmtoeGdrcXBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNTAxNTUsImV4cCI6MjA5MTkyNjE1NX0.IIKoTZorEeGdZbeqMJPCIWp14ZTsKaZpt4UOnDcVb84';

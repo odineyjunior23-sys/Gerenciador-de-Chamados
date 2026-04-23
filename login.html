@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gerenciador de Chamados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0b1120 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #64748b;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0891b2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .alert-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .alert-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #64748b;
+        }
+
+        .spinner {
+            border: 2px solid #334155;
+            border-top: 2px solid #38bdf8;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        .features li {
+            margin: 5px 0;
+        }
+
+        .features li:before {
+            content: "✓";
+            color: #22c55e;
+            font-weight: bold;
+            display: inline-block;
+            width: 20px;
+        }
+
+        .bottom-links {
+            text-align: center;
+            margin-top: 30px;
+            color: #64748b;
+        }
+
+        .bottom-links a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .bottom-links a:hover {
+            text-decoration: underline;
+        }
+
+        .version-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+
+            .login-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🚀 Login</h1>
+            <p>Gerenciador de Chamados</p>
+        </div>
+
+        <div class="alert alert-info" id="infoAlert">
+            <span class="spinner"></span>
+            Conectando ao sistema...
+        </div>
+
+        <div class="alert alert-error" id="errorAlert">
+            ❌ Erro ao conectar. Verifique sua conexão.
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    Senha
+                    <span style="float: right; font-size: 0.8rem; color: #64748b;">
+                        <a href="#" style="color: #38bdf8; text-decoration: none;">Esqueceu a senha?</a>
+                    </span>
+                </label>
+                <input type="password" id="password" class="form-control" placeholder="Digite sua senha" required>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <span id="loginBtnText">Entrar no Sistema</span>
+                <span class="spinner" id="loginSpinner"></span>
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <span class="spinner"></span>
+            Carregando ambiente...
+        </div>
+
+        <div class="features">
+            <h4 style="color: #cbd5e1; margin-bottom: 10px;">Funcionalidades</h4>
+            <ul>
+                <li>Acesso remoto de qualquer computador</li>
+                <li>Sincronização automática em tempo real</li>
+                <li>Suporte para múltiplos usuários</li>
+                <li>Backup automático na nuvem</li>
+                <li>Histórico de acessos</li>
+            </ul>
+        </div>
+
+        <div class="bottom-links">
+            <p>Não tem uma conta? <a href="#" onclick="criarConta()">Crie uma agora</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se já está logado
+            checkAuthStatus();
+
+            // Configurar formulário
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        });
+
+        // Verificar status de autenticação
+        async function checkAuthStatus() {
+            try {
+                const user = await getStoredUser();
+                if (user) {
+                    // Usuário já está logado, redirecionar
+                    redirectToApp();
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                showLogin();
+            }
+        }
+
+        // Mostrar formulário de login
+        function showLogin() {
+            document.getElementById('infoAlert').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Lidar com login
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validar
+            if (!email || !password) {
+                showError('É necessário preencher todos os campos');
+                return;
+            }
+
+            // Mostrar loading
+            showLoading(true);
+
+            try {
+                // Simular login (substituir por API real)
+                await simulateLogin(email, password);
+
+                // Salvar usuário
+                await storeUser(email);
+
+                // Redirecionar
+                redirectToApp();
+
+            } catch (error) {
+                showError(error.message || 'Erro ao fazer login');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Simular login (substituir por API real)
+        async function simulateLogin(email, password) {
+            // Simular delay de API
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Validação básica
+            if (!email.includes('@')) {
+                throw new Error('É necessário um e-mail válido');
+            }
+
+            if (password.length < 6) {
+                throw new Error('A senha deve ter pelo menos 6 caracteres');
+            }
+
+            // Simular usuários válidos
+            const validUsers = [
+                'admin@gerenciador.com',
+                'usuario@gerenciador.com',
+                'suporte@gerenciador.com'
+            ];
+
+            if (!validUsers.includes(email.toLowerCase())) {
+                throw new Error('E-mail ou senha incorretos');
+            }
+
+            // Login bem-sucedido
+            return {
+                email: email,
+                name: email.split('@')[0],
+                role: email.startsWith('admin') ? 'admin' : 'user',
+                token: 'fake-jwt-token-123456'
+            };
+        }
+
+        // Salvar usuário no localStorage
+        async function storeUser(userData) {
+            localStorage.setItem('loggedUser', JSON.stringify(userData));
+            localStorage.setItem('lastLogin', new Date().toISOString());
+        }
+
+        // Obter usuário armazenado
+        async function getStoredUser() {
+            const user = localStorage.getItem('loggedUser');
+            return user ? JSON.parse(user) : null;
+        }
+
+        // Mostrar loading
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const spinner = document.getElementById('loginSpinner');
+            const btnText = document.getElementById('loginBtnText');
+
+            if (show) {
+                loading.style.display = 'block';
+                spinner.style.display = 'inline-block';
+                btnText.textContent = 'Entrando...';
+                document.getElementById('loginForm').style.display = 'none';
+            } else {
+                loading.style.display = 'none';
+                spinner.style.display = 'none';
+                btnText.textContent = 'Entrar no Sistema';
+                document.getElementById('loginForm').style.display = 'block';
+            }
+        }
+
+        // Mostrar erro
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.textContent = `❌ ${message}`;
+            errorAlert.style.display = 'block';
+
+            // Esconder após 5 segundos
+            setTimeout(() => {
+                errorAlert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Redirecionar para app
+        function redirectToApp() {
+            // Substituir por URL real
+            window.location.href = 'index.html';
+        }
+
+        // Criar conta
+        function criarConta() {
+            // Implementar criação de conta
+            alert('Área de criação de conta em desenvolvimento!');
+        }
+
+        // Verificar se o usuário já está logado ao carregar
+        checkAuthStatus();
+    </script>
+
+    <div class="version-info">
+        v1.0.0 - Gerenciador de Chamados - © 2026
+    </div>
+</body>
+</html>

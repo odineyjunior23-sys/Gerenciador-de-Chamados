@@ -144,7 +144,33 @@
     .count-bar span strong { color: #94a3b8; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(56,189,248,0.4); } 70% { box-shadow: 0 0 0 10px rgba(56,189,248,0); } 100% { box-shadow: 0 0 0 0 rgba(56,189,248,0); } }
     .chamado-item.highlight { animation: pulse 0.8s ease-out; border-left-color: #38bdf8 !important; }
-    @media (max-width: 768px) { .main-container { flex-direction: column; } .right-panel { width: 100%; } .topbar { flex-direction: column; text-align: center; } }
+    .local-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; margin-top: 3px; max-height: 220px; overflow-y: auto; z-index: 200; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .local-suggestions.show { display: block; }
+    .local-sugg-item { padding: 0.5rem 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #1e293b; transition: background 0.1s; }
+    .local-sugg-item:hover, .local-sugg-item.selected { background: #263348; }
+    .local-sugg-item:last-child { border-bottom: none; }
+    .local-sugg-icon { font-size: 0.9rem; flex-shrink: 0; }
+    .local-sugg-nome { font-size: 0.8rem; color: #e2e8f0; flex: 1; }
+    .local-sugg-regiao { font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
+    .local-sugg-tipo { font-size: 0.6rem; color: #64748b; }
+    .region-preview { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.35rem; min-height: 1.4rem; font-size: 0.78rem; transition: all 0.2s; }
+    .region-preview-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .region-preview-text { font-weight: 600; }
+    .chamado-local-link { cursor: pointer; text-decoration: underline dotted; color: inherit; }
+    .chamado-local-link:hover { opacity: 0.8; }
+    .chamado-regiao-badge { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; border: 1px solid; cursor: pointer; margin-left: 4px; transition: opacity 0.15s; }
+    .chamado-regiao-badge:hover { opacity: 0.75; }
+    /* ── Inline edit panel ── */
+    .inline-edit-panel { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 0.75rem 1rem; margin: -2px 0 6px 0; animation: slideUp 0.15s ease-out; }
+    .inline-edit-panel .ie-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 0.5rem; }
+    .inline-edit-panel .ie-group { display: flex; flex-direction: column; gap: 0.2rem; }
+    .inline-edit-panel label { font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; }
+    .inline-edit-panel input, .inline-edit-panel select, .inline-edit-panel textarea { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; font-size: 0.8rem; font-family: inherit; padding: 0.35rem 0.55rem; outline: none; transition: border-color 0.15s; }
+    .inline-edit-panel input:focus, .inline-edit-panel select:focus, .inline-edit-panel textarea:focus { border-color: #38bdf8; }
+    .inline-edit-panel textarea { resize: vertical; min-height: 52px; width: 100%; }
+    .inline-edit-panel .ie-num { width: 90px; }
+    .inline-edit-panel .ie-local { flex: 1; min-width: 160px; }
+    .inline-edit-panel .ie-actions { display: flex; gap: 0.4rem; justify-content: flex-end; margin-top: 0.1rem; }
   </style>
 </head>
 <body>
@@ -200,15 +226,21 @@
       <!-- Regional Map Section -->
       <div class="region-map-card">
         <h3 style="margin-bottom:0.75rem;color:#38bdf8;font-size:1rem;display:flex;justify-content:space-between;align-items:center;">
-          Regiões de Maracaju - MS
-          <span style="font-size:0.7rem;color:#64748b;font-weight:normal">Passe o mouse no mapa</span>
+          Maracaju – Mapa Completo
+          <span style="font-size:0.7rem;color:#64748b;font-weight:normal">Clique nos marcadores</span>
         </h3>
-        <div class="legend-regions">
+        <div class="legend-regions" style="flex-wrap:wrap;gap:0.5rem 1rem;">
           <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Norte</div>
           <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Sul</div>
           <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span> Leste</div>
           <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Oeste</div>
           <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span> Centro</div>
+          <div class="legend-item" style="border-left:1px solid #334155;padding-left:0.75rem;margin-left:0.25rem;">
+            <span style="font-size:0.8rem;">🏛️</span> <span style="color:#94a3b8">Secretarias</span>
+          </div>
+          <div class="legend-item"><span style="font-size:0.8rem;">🏫</span> <span style="color:#94a3b8">Escolas</span></div>
+          <div class="legend-item"><span style="font-size:0.8rem;">🎒</span> <span style="color:#94a3b8">CIEIs</span></div>
+          <div class="legend-item"><span style="font-size:0.8rem;">🏥</span> <span style="color:#94a3b8">Postos de Saúde</span></div>
         </div>
         <div id="maracajuMap" style="width:100%;min-height:260px;height:260px;border-radius:8px;position:relative;"></div>
         <p id="region-detected" style="margin-top:0.5rem;font-size:0.85rem;color:#64748b;text-align:center;min-height:1.2em;"></p>
@@ -237,9 +269,14 @@
               <label for="chamadoNumero">Número do Chamado</label>
               <input type="number" id="chamadoNumero" placeholder="Ex: 1234" required autocomplete="off">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position:relative;">
               <label for="chamadoLocal">Local</label>
-              <input type="text" id="chamadoLocal" placeholder="Ex: Sala 302 - Térreo" required>
+              <input type="text" id="chamadoLocal" placeholder="Digite escola, posto, secretaria..." required autocomplete="off">
+              <div class="local-suggestions" id="localSuggestions"></div>
+              <div class="region-preview" id="regionPreview" style="display:none;">
+                <div class="region-preview-dot" id="regionPreviewDot"></div>
+                <span class="region-preview-text" id="regionPreviewText"></span>
+              </div>
             </div>
             <div class="form-group">
               <label for="chamadoUrgencia">Urgência</label>
@@ -389,18 +426,83 @@
       if (!item) return;
       
       let newStatus;
-      if (item.status === 'a-fazer') newStatus = 'pendente';
-      else if (item.status === 'pendente') newStatus = 'concluido';
-      else newStatus = 'a-fazer';
+      if (item.status === 'concluido') newStatus = 'a-fazer';
+      else newStatus = 'concluido';
 
       const { error } = await _supabase
         .from('chamados')
-        .update({ status: newStatus, modifiedAt: new Date().toISOString() })
+        .update({ status: newStatus, data_modificacao: new Date().toISOString() })
         .eq('id', id);
 
       if (error) return alert('Erro ao atualizar status: ' + error.message);
       renderChamados();
     }
+
+    // Inline edit — abre painel compacto diretamente no item
+    window.openInlineEdit = function(id) {
+      // Fecha qualquer painel aberto
+      document.querySelectorAll('.inline-edit-panel').forEach(p => { p.style.display = 'none'; p.innerHTML = ''; });
+
+      const item = chamadosCache.find(c => c.id === id);
+      if (!item) return;
+      const panel = document.getElementById('edit-panel-' + id);
+      if (!panel) return;
+
+      const urgOpts = [
+        ['muito-alta','🔴 Muito Alta'],['alta','🟠 Alta'],['media','🟡 Média'],
+        ['baixa','🔵 Baixa'],['muito-baixa','🟢 Muito Baixa']
+      ].map(([v,l]) => `<option value="${v}"${item.urgency===v?' selected':''}>${l}</option>`).join('');
+
+      const stOpts = [
+        ['a-fazer','A Fazer'],['pendente','Pendente'],['concluido','Concluído']
+      ].map(([v,l]) => `<option value="${v}"${item.status===v?' selected':''}>${l}</option>`).join('');
+
+      panel.innerHTML = `
+        <div class="ie-row">
+          <div class="ie-group">
+            <label>Nº</label>
+            <input class="ie-num" id="ie-num-${id}" type="number" value="${escapeHtml(String(item.numero))}">
+          </div>
+          <div class="ie-group ie-local">
+            <label>Local</label>
+            <input id="ie-local-${id}" type="text" value="${escapeHtml(item.local)}">
+          </div>
+          <div class="ie-group">
+            <label>Urgência</label>
+            <select id="ie-urg-${id}">${urgOpts}</select>
+          </div>
+          <div class="ie-group">
+            <label>Status</label>
+            <select id="ie-st-${id}">${stOpts}</select>
+          </div>
+        </div>
+        <div class="ie-group" style="width:100%">
+          <label>Problema</label>
+          <textarea id="ie-prob-${id}">${escapeHtml(item.problem)}</textarea>
+        </div>
+        <div class="ie-actions">
+          <button class="btn btn-cancel" style="font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="document.getElementById('edit-panel-${id}').style.display='none'">Cancelar</button>
+          <button class="btn btn-primary" style="font-size:0.75rem;padding:0.3rem 0.8rem;" onclick="saveInlineEdit('${id}')">💾 Salvar</button>
+        </div>`;
+      panel.style.display = 'block';
+      document.getElementById('ie-prob-' + id).focus();
+    };
+
+    window.saveInlineEdit = async function(id) {
+      const numero  = document.getElementById('ie-num-'   + id)?.value.trim();
+      const local   = document.getElementById('ie-local-' + id)?.value.trim();
+      const problema= document.getElementById('ie-prob-'  + id)?.value.trim();
+      const urgencia= document.getElementById('ie-urg-'   + id)?.value;
+      const status  = document.getElementById('ie-st-'    + id)?.value;
+      if (!numero || !local || !problema) return;
+      const regiao = detectRegionFromLocal(local);
+      const { error } = await _supabase.from('chamados').update({
+        numero, localizacao: local, problema, urgencia, status, regiao,
+        data_modificacao: new Date().toISOString()
+      }).eq('id', id);
+      if (error) return alert('Erro ao salvar: ' + error.message);
+      renderChamados();
+    };
 
     function editChamado(id) {
       const item = chamadosCache.find(c => c.id === id);
@@ -936,27 +1038,94 @@
     // ============ REGION MAP ============
     const REGION_COLORS = { 'Norte':'#ef4444','Sul':'#22c55e','Leste':'#3b82f6','Oeste':'#f59e0b','Centro':'#8b5cf6' };
 
+    // Mapeamento expandido de bairros/localidades → região
     const REGION_BAIRROS = {
-      'Norte': ['Jardim Norte','Vila Nova','Alto da Colina','Panambi','São João','Jardim São Pedro Norte'],
-      'Sul': ['Jardim Sul','Vila São Pedro','São Pedro','Rocha','Silva','Tarumã','Paranavaí','Balneário'],
-      'Leste': ['Jardim Leste','Progresso','Esperança','Vitória','Euro-Americano','Povoado'],
-      'Oeste': ['Jardim Oeste','Bonfim','Cidade Morena','Jardim Morena','Vila Oeste'],
-      'Centro': ['Centro','Pardim','Matriz','Bela Vista','Jardim Getúlio','Presidente','Jardim Presidentes']
+      'Norte': [
+        'Jardim Norte','Vila Nova','Alto da Colina','Panambi','São João','Jardim São Pedro Norte',
+        'Vila Juquita','Vila Adrien','Conjunto Geazone','Geazone','Ivan Loureiro','Bairro Ivan Loureiro',
+        'Vila Margarida','Egídio Ribeiro','Egidio Ribeiro','Vila Prateada','Prateada'
+      ],
+      'Sul': [
+        'Jardim Sul','Vila São Pedro','São Pedro','Rocha','Silva','Tarumã','Paranavaí','Balneário',
+        'Alto Maracaju','BNH','Jardim Brejão','Brejão','Conjunto Floripes','Floripes',
+        'Jardim Guanabara','Guanabara','Cambaraí','Cambarai'
+      ],
+      'Leste': [
+        'Jardim Leste','Progresso','Esperança','Vitória','Euro-Americano','Povoado',
+        'Distrito','Vista Alegre','zona rural','rural','Assentamento','Valinhos','Canta Galo'
+      ],
+      'Oeste': [
+        'Jardim Oeste','Bonfim','Cidade Morena','Jardim Morena','Vila Oeste'
+      ],
+      'Centro': [
+        'Centro','Pardim','Matriz','Bela Vista','Jardim Getúlio','Presidente','Jardim Presidentes',
+        'Rua Appa','Vila do Açúcar','Dracena','Rua 11 de Junho'
+      ],
+      // Esses são mapeados internamente para Norte/Sul mas listados para busca
+      'Paraguaí': ['Bairro Paraguaí','Paraguaí','Quintino Bocaiuva','Joaquim Murtinho']
+    };
+
+    // Normaliza regiões auxiliares para as 5 principais
+    const REGION_NORMALIZE = { 'Paraguaí':'Norte' };
+
+    // Lookup rápido: nome de local/escola/posto → região
+    const LOCAL_LOOKUP = {
+      // Secretarias
+      'prefeitura':'Centro','secretaria de administração':'Centro','secretaria de educação':'Centro',
+      'secretaria de obras':'Centro','secretaria de desenvolvimento':'Centro','creas':'Centro',
+      'secretaria de assistência social':'Norte','secretaria de cultura':'Norte',
+      // Escolas
+      'joão pedro fernandes':'Centro',
+      'cecília de castro minervini':'Norte','cecília minervini':'Norte',
+      'maurícia paré gomes':'Norte','mauricia pare':'Norte',
+      'josé pereira da rosa':'Norte','jose pereira da rosa':'Norte',
+      'irma de lima matos':'Sul','irma lima matos':'Sul',
+      'joão batista lino braga':'Sul','lino braga':'Sul',
+      'júlio müller':'Leste','julio mulle':'Leste','júlio mulle':'Leste',
+      'ciro aniz':'Leste',
+      // CIEIs
+      'gregória martins':'Norte','gregoria martins':'Norte',
+      'nossa senhora auxiliadora':'Norte','auxiliadora':'Norte',
+      'são benedito':'Sul','sao benedito':'Sul',
+      // Postos de saúde
+      'posto central':'Norte','centro de especialidades':'Norte',
+      'orestes rocha':'Norte',
+      'olivio ferreira de lima':'Norte','olívio ferreira':'Norte',
+      'nestor ferreira muzzi':'Norte','nestor muzzi':'Norte',
+      'ambrósio olegário':'Norte','ambrosio olegario':'Norte',
+      'walfrido ferreira':'Norte','olidia rocha':'Norte',
+      'balbino corrêa de lima':'Norte','balbino correa':'Norte',
+      'egídio ribeiro':'Norte','egidio ribeiro':'Norte',
+      'joão leopoldo koch':'Sul','koch netto':'Sul',
+      'clementino de barros':'Sul','clementino barros':'Sul',
+      'cambaraí':'Sul','cambarai':'Sul',
+      'valinhos':'Leste','assentamento valinhos':'Leste','saúde no campo':'Leste',
     };
 
     function detectRegionFromLocal(local) {
       if (!local) return 'Centro';
       const l = local.toLowerCase().trim();
+
+      // 1) Lookup direto por nome de estabelecimento
+      for (const [key, region] of Object.entries(LOCAL_LOOKUP)) {
+        if (l.includes(key)) return REGION_NORMALIZE[region] || region;
+      }
+
+      // 2) Busca por bairros conhecidos
       for (const [region, bairros] of Object.entries(REGION_BAIRROS)) {
-        for (const bairro of bairros) { if (l.includes(bairro.toLowerCase())) return region; }
+        for (const bairro of bairros) {
+          if (l.includes(bairro.toLowerCase())) return REGION_NORMALIZE[region] || region;
+        }
       }
-      if (l.includes('centro')) return 'Centro';
-      if (l.includes('jardim')) {
-        if (l.includes('norte')) return 'Norte';
-        if (l.includes('sul')) return 'Sul';
-        if (l.includes('leste')) return 'Leste';
-        if (l.includes('oeste')) return 'Oeste';
-      }
+
+      // 3) Fallback por palavras-chave de direção
+      if (l.includes('norte')) return 'Norte';
+      if (l.includes('sul'))   return 'Sul';
+      if (l.includes('leste')) return 'Leste';
+      if (l.includes('oeste')) return 'Oeste';
+      if (l.includes('centro') || l.includes('central')) return 'Centro';
+      if (l.includes('rural') || l.includes('distrito') || l.includes('assentamento')) return 'Leste';
+
       return 'Centro';
     }
 
@@ -967,39 +1136,247 @@
     function initLeafletMap() {
       const mapEl = document.getElementById('maracajuMap');
       if (!mapEl || map) return;
-      const center = [-20.4511, -54.9297];
-      map = L.map('maracajuMap', { center, zoom: 13, zoomControl: true });
+
+      const center = [-21.6218, -55.1630];
+      map = L.map('maracajuMap', { center, zoom: 14, zoomControl: true });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19
       }).addTo(map);
 
+      // ── Polígonos das regiões de Maracaju (coordenadas reais) ──
       const regionBoundaries = {
-        'Norte': [[-20.44,-54.94],[-20.42,-54.94],[-20.42,-54.88],[-20.44,-54.88]],
-        'Sul': [[-20.48,-54.94],[-20.46,-54.94],[-20.46,-54.88],[-20.48,-54.88]],
-        'Leste': [[-20.44,-54.88],[-20.42,-54.88],[-20.42,-54.86],[-20.44,-54.86]],
-        'Oeste': [[-20.44,-55.00],[-20.42,-55.00],[-20.42,-54.98],[-20.44,-54.98]],
-        'Centro': [[-20.45,-54.93],[-20.43,-54.93],[-20.43,-54.91],[-20.45,-54.91]]
+        'Norte': [[-21.595,-55.185],[-21.595,-55.140],[-21.615,-55.140],[-21.615,-55.185]],
+        'Sul':   [[-21.648,-55.185],[-21.648,-55.140],[-21.630,-55.140],[-21.630,-55.185]],
+        'Leste': [[-21.630,-55.140],[-21.610,-55.140],[-21.610,-55.125],[-21.630,-55.125]],
+        'Oeste': [[-21.630,-55.200],[-21.610,-55.200],[-21.610,-55.185],[-21.630,-55.185]],
+        'Centro':[[-21.630,-55.185],[-21.610,-55.185],[-21.610,-55.140],[-21.630,-55.140]]
       };
 
       Object.entries(regionBoundaries).forEach(([regionName, coords]) => {
+        const bairros = (REGION_BAIRROS[regionName] || []).slice(0,5);
         const polygon = L.polygon(coords, {
-          color: REGION_COLORS[regionName],
-          fillColor: REGION_COLORS[regionName],
-          fillOpacity: 0.4, weight: 2,
-          dashArray: regionName === 'Centro' ? '' : '5, 5'
+          color: REGION_COLORS[regionName], fillColor: REGION_COLORS[regionName],
+          fillOpacity: 0.1, weight: 2, dashArray: regionName === 'Centro' ? '' : '5,5'
         }).addTo(map);
-
-        const bairros = REGION_BAIRROS[regionName] || [];
-        polygon.bindTooltip(`<strong>${regionName}</strong><br>${bairros.join(', ')}`, {
-          sticky: true, direction: 'top', offset: [0,-10]
-        });
+        polygon.bindTooltip(`<strong>${regionName}</strong><br><small>${bairros.join(', ')}</small>`,
+          { sticky: true, direction: 'top', offset: [0,-10] });
         polygon.on('click', () => selectRegion(regionName));
         regionLayers[regionName] = polygon;
       });
 
-      L.marker(center).addTo(map).bindPopup('<b>Maracaju</b><br>Mato Grosso do Sul');
+      // ── Helpers ──
+      function makeIcon(emoji, cor, size=30) {
+        return L.divIcon({
+          className: '',
+          html: `<div style="background:${cor};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.48)}px;box-shadow:0 2px 8px rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.65);cursor:pointer;">${emoji}</div>`,
+          iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-size/2+2]
+        });
+      }
+
+      function addMarker(lat, lng, emoji, cor, nome, tipo, regiao, endereco, tel, nota, horario) {
+        const badge = tipo ? `<span style="display:inline-block;background:${cor}22;color:${cor};border:1px solid ${cor}55;border-radius:4px;padding:1px 7px;font-size:0.62rem;font-weight:700;margin-bottom:4px;">${tipo}</span>` : '';
+        const popup = `<div style="font-family:Segoe UI,sans-serif;min-width:200px;max-width:255px;line-height:1.55;">
+          ${badge}
+          <div style="font-weight:700;color:${cor};font-size:0.83rem;margin-bottom:3px;">${nome}</div>
+          <div style="font-size:0.72rem;color:#444;">
+            <div>📍 ${endereco}</div>
+            <div>🏘️ ${regiao}</div>
+            ${tel    ? `<div>📞 ${tel}</div>`    : ''}
+            ${nota   ? `<div>${nota}</div>`       : ''}
+            ${horario? `<div>🕐 ${horario}</div>`: ''}
+          </div>
+        </div>`;
+        L.marker([lat,lng],{icon:makeIcon(emoji,cor)}).addTo(map).bindPopup(popup,{maxWidth:275});
+      }
+
+      // ══════════════════════════════════════════
+      // 🏛️  SECRETARIAS DA PREFEITURA
+      // ══════════════════════════════════════════
+      const secretarias = [
+        [-21.6218352,-55.1564098,'🏛️','#8b5cf6','Prefeitura Municipal de Maracaju','Prefeitura','Centro','R. Appa, 120 – Centro','(67) 3454-1320','⭐ 4.5','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6220079,-55.1561040,'🗂️','#8b5cf6','Secretaria de Administração','Secretaria','Centro','R. Appa, 120 – Centro','(67) 3454-1320','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6262322,-55.1573258,'📚','#3b82f6','Secretaria Municipal de Educação','Secretaria','Centro','Av. João Pedro Fernandes, 115 – Centro','(67) 3454-3046','⭐ 4.3','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6234079,-55.1590313,'🌿','#22c55e','Sec. Desenvolvimento Econômico e Meio Ambiente','Secretaria','Centro','R. Dracena, 2410 – Centro','(67) 3454-1731','⭐ 4.7','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6227003,-55.1601471,'👨‍👩‍👧','#f59e0b','CREAS – Assistência Social Especializada','CREAS','Centro','R. 11 de Junho, 621 – Centro','','⭐ 5.0','Seg–Dom 7h–11h / 13h–17h'],
+        [-21.6218394,-55.1543311,'🏗️','#ef4444','Secretaria de Obras e Urbanismo','Secretaria','Vila do Açúcar','Vila do Açúcar – Maracaju','(67) 3454-4040','⭐ 4.3','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6156486,-55.1669826,'🤝','#f97316','Sec. Municipal de Assistência Social','Secretaria','Bairro Paraguaí','R. Quintino Bocaiuva, 920 – Paraguaí','(67) 3454-1363','',''],
+        [-21.6026424,-55.1669879,'🎭','#ec4899','Coord. Secretaria Municipal de Cultura','Secretaria','Vila Juquita','R. da Independência, 2160 – Vila Juquita','(67) 3454-2569','','Seg–Dom 7h–11h / 13h–17h'],
+      ];
+      secretarias.forEach(s => addMarker(...s));
+
+      // ══════════════════════════════════════════
+      // 🎓  ESCOLAS MUNICIPAIS
+      // ══════════════════════════════════════════
+      const escolas = [
+        [-21.6234822,-55.1569947,'🏫','#0ea5e9','E.M. João Pedro Fernandes','Escola Municipal','Centro','Centro – Maracaju','','','Seg–Sex 7h–17h'],
+        [-21.6023581,-55.1748094,'🏫','#0ea5e9','E.M. Profª Cecília de Castro Minervini','Escola Municipal','Vila Juquita','R. dos Pereiras – Vila Juquita','','','Seg–Sex 7h–17h'],
+        [-21.6029208,-55.1626772,'🏫','#0ea5e9','E.M. Maurícia Paré Gomes','Escola Municipal','Vila Adrien','R. Vacaria, 120 – Vila Adrien','(67) 3454-7780','','Seg–Sex 7h–17h'],
+        [-21.6125184,-55.1701058,'🏫','#0ea5e9','E.M. José Pereira da Rosa','Escola Municipal','Bairro Ivan Loureiro','R. Osvaldo Cardoso – Ivan Loureiro','(67) 3454-7554','','Seg–Sex 7h–17h'],
+        [-21.6362700,-55.1728410,'🏫','#0ea5e9','E.M. Profª Irma de Lima Matos','Escola Municipal','BNH / Jardim Brejão','R. Anízio Azambuja, 2 – BNH Brejão','(67) 3454-7546','','Seg–Sex 7h–17h'],
+        [-21.6395263,-55.1612129,'🏫','#0ea5e9','E.M. João Batista Lino Braga','Escola Municipal','Alto Maracaju','R. Dep. Emanoel Pinheiro s/n – Alto Maracaju','(67) 3454-7549','','Seg–Sex 7h–17h'],
+        [-21.7290264,-55.5020427,'🏫','#64748b','E.M. Júlio Müller (Pólo)','Escola Municipal – Rural','Distrito Vista Alegre','R. Azarias Alves Pereira s/n – Vista Alegre','(67) 3405-1170','','Seg–Sex 7h–17h'],
+        [-21.7316921,-55.5082226,'🏫','#64748b','E.M. Ciro Aniz','Escola Municipal – Rural','Distrito Vista Alegre','Av. Cel. Francisco Alves – Vista Alegre','(67) 3405-1511','⭐ 5.0','Seg–Sex 7h–17h'],
+      ];
+      escolas.forEach(e => addMarker(...e));
+
+      // ══════════════════════════════════════════
+      // 🎒  CIEIs
+      // ══════════════════════════════════════════
+      const cieis = [
+        [-21.6014859,-55.1739927,'🎒','#a855f7','CIEI Gregória Martins','CIEI','Conjunto Geazone','R. Maria de Pereira dos Santos – Geazone','(67) 3454-4566','⭐ 4.5','Seg–Sex 7h–17h'],
+        [-21.6132242,-55.1664838,'🎒','#a855f7','CIEI Nossa Senhora Auxiliadora','CIEI','Bairro Paraguaí','R. Joaquim Murtinho – Bairro Paraguaí','(67) 3454-7272','','Seg–Sex 7h–17h'],
+        [-21.6313015,-55.1712295,'🎒','#a855f7','CIEI São Benedito','CIEI','Conjunto Floripes','R. Antônio de Souza Marcondes – Floripes','(67) 3454-3989','⭐ 4.7','Seg–Sex 7h–17h'],
+      ];
+      cieis.forEach(c => addMarker(...c));
+
+      // ══════════════════════════════════════════
+      // 🏥  POSTOS DE SAÚDE (ESF / UBS)
+      // ══════════════════════════════════════════
+      const postos = [
+        [-21.6165581,-55.1708930,'🏥','#f43f5e','Centro de Especialidades – Posto Central','UBS / Centro de Especialidades','Vila Prateada','R. Teofanes Barbosa de Morães, 330 – Vila Prateada','(67) 3454-4874','⭐ 4.5','Seg–Sex 6h–17h'],
+        [-21.6149435,-55.1669240,'🏥','#f43f5e','UBS ESF Dr. Orestes Rocha','UBS / ESF','Vila Prateada','Vila Prateada – Maracaju','','','Seg–Sex 13h–17h'],
+        [-21.6161880,-55.1704929,'🏥','#f43f5e','ESF Olívio Ferreira de Lima','UBS / ESF','Bairro Paraguaí','R. Teofanes Barbosa de Morães, 100 – Paraguaí','(67) 3454-4874','','Seg–Sex 6h–18h / Sáb 6h–11h'],
+        [-21.6043691,-55.1658630,'🏥','#f43f5e','UBS Nestor Ferreira Muzzi – ESF da Família','UBS / ESF','Vila Juquita','R. Vacaria – Vila Juquita','(67) 3454-3529','⭐ 4.3','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6052649,-55.1697199,'🏥','#f43f5e','ESF/UBS Ambrósio Olegário Lima','UBS / ESF','Vila Adrien','R. Olsair Lopes do Nascimento – Vila Adrien','','⭐ 4.0','Seg–Sex 13h–17h'],
+        [-21.6022443,-55.1599625,'🏥','#f43f5e','UBS Dr. Walfrido Ferreira de Azambuja (ESF Olídia Rocha)','UBS / ESF','Vila Adrien','R. Jequitibá – Vila Adrien','','','Seg–Sex 13h–17h'],
+        [-21.6147986,-55.1644579,'🏥','#f43f5e','ESF – Balbino Corrêa de Lima','UBS / ESF','Vila Margarida','R. Benjamin Constant, 710 – Vila Margarida','(67) 3454-6859','⭐ 4.8','Seg–Sex 7h–11h / 13h–21h'],
+        [-21.6159035,-55.1536818,'🏥','#f43f5e','ESF – Egídio Ribeiro','UBS / ESF','Egídio Ribeiro','R. Alcides Vieira de Matos, 65 – Egídio Ribeiro','(67) 3454-3065','⭐ 5.0','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6350598,-55.1627454,'🏥','#f43f5e','ESF – João Leopoldo Koch Netto','UBS / ESF','Jardim Guanabara','R. Tucumã – Jardim Guanabara','(67) 3454-6646','⭐ 4.5',''],
+        [-21.6282958,-55.1675409,'🏥','#f43f5e','ESF – Dr. Clementino de Barros Wanderley','UBS / ESF','Cambaraí','R. Pereira do Lago – Cambaraí','(67) 3454-5194','⭐ 5.0','Seg–Sex 13h–17h'],
+        [-21.6286842,-55.1722274,'🏥','#f43f5e','ESF Cambaraí','UBS / ESF','Cambaraí','R. Pereira do Lago s/n – Cambaraí','','',''],
+        [-21.3071892,-55.3002080,'🏥','#64748b','UBS Saúde no Campo – Assentamento Valinhos','UBS Rural','Zona Rural (Assentamento Valinhos)','Assentamento Valinhos – Maracaju','(67) 3454-1320','','Seg–Sex 13h–17h'],
+      ];
+      postos.forEach(p => addMarker(...p));
     }
+
+    // ============ AUTOCOMPLETE DO CAMPO LOCAL ============
+    // Catálogo completo de locais conhecidos
+    const LOCAL_CATALOG = [
+      // Secretarias
+      { nome:'Prefeitura Municipal de Maracaju',       tipo:'Secretaria', icon:'🏛️', regiao:'Centro' },
+      { nome:'Secretaria de Administração',            tipo:'Secretaria', icon:'🗂️', regiao:'Centro' },
+      { nome:'Secretaria Municipal de Educação',       tipo:'Secretaria', icon:'📚', regiao:'Centro' },
+      { nome:'Sec. Desenvolvimento Econômico e Meio Ambiente', tipo:'Secretaria', icon:'🌿', regiao:'Centro' },
+      { nome:'CREAS – Assistência Social Especializada', tipo:'CREAS', icon:'👨‍👩‍👧', regiao:'Centro' },
+      { nome:'Secretaria de Obras e Urbanismo',        tipo:'Secretaria', icon:'🏗️', regiao:'Centro' },
+      { nome:'Sec. Municipal de Assistência Social',   tipo:'Secretaria', icon:'🤝', regiao:'Norte' },
+      { nome:'Coord. Secretaria Municipal de Cultura', tipo:'Secretaria', icon:'🎭', regiao:'Norte' },
+      // Escolas
+      { nome:'E.M. João Pedro Fernandes',              tipo:'Escola Municipal', icon:'🏫', regiao:'Centro' },
+      { nome:'E.M. Profª Cecília de Castro Minervini', tipo:'Escola Municipal', icon:'🏫', regiao:'Norte' },
+      { nome:'E.M. Maurícia Paré Gomes',               tipo:'Escola Municipal', icon:'🏫', regiao:'Norte' },
+      { nome:'E.M. José Pereira da Rosa',              tipo:'Escola Municipal', icon:'🏫', regiao:'Norte' },
+      { nome:'E.M. Profª Irma de Lima Matos',          tipo:'Escola Municipal', icon:'🏫', regiao:'Sul' },
+      { nome:'E.M. João Batista Lino Braga',           tipo:'Escola Municipal', icon:'🏫', regiao:'Sul' },
+      { nome:'E.M. Júlio Müller (Pólo)',               tipo:'Escola Municipal – Rural', icon:'🏫', regiao:'Leste' },
+      { nome:'E.M. Ciro Aniz',                         tipo:'Escola Municipal – Rural', icon:'🏫', regiao:'Leste' },
+      // CIEIs
+      { nome:'CIEI Gregória Martins',                  tipo:'CIEI', icon:'🎒', regiao:'Norte' },
+      { nome:'CIEI Nossa Senhora Auxiliadora',         tipo:'CIEI', icon:'🎒', regiao:'Norte' },
+      { nome:'CIEI São Benedito',                      tipo:'CIEI', icon:'🎒', regiao:'Sul' },
+      // Postos de Saúde
+      { nome:'Centro de Especialidades – Posto Central', tipo:'UBS / Centro de Especialidades', icon:'🏥', regiao:'Norte' },
+      { nome:'UBS ESF Dr. Orestes Rocha',              tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'ESF Olívio Ferreira de Lima',            tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'UBS Nestor Ferreira Muzzi – ESF da Família', tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'ESF/UBS Ambrósio Olegário Lima',         tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'UBS Dr. Walfrido Ferreira de Azambuja', tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'ESF – Balbino Corrêa de Lima',           tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'ESF – Egídio Ribeiro',                   tipo:'UBS / ESF', icon:'🏥', regiao:'Norte' },
+      { nome:'ESF – João Leopoldo Koch Netto',         tipo:'UBS / ESF', icon:'🏥', regiao:'Sul' },
+      { nome:'ESF – Dr. Clementino de Barros Wanderley', tipo:'UBS / ESF', icon:'🏥', regiao:'Sul' },
+      { nome:'ESF Cambaraí',                           tipo:'UBS / ESF', icon:'🏥', regiao:'Sul' },
+      { nome:'UBS Saúde no Campo – Valinhos',          tipo:'UBS Rural', icon:'🏥', regiao:'Leste' },
+    ];
+
+    (function initLocalAutocomplete() {
+      const input  = document.getElementById('chamadoLocal');
+      const box    = document.getElementById('localSuggestions');
+      const prevEl = document.getElementById('regionPreview');
+      const dotEl  = document.getElementById('regionPreviewDot');
+      const txtEl  = document.getElementById('regionPreviewText');
+      let activeIdx = -1;
+
+      function showPreview(regiao) {
+        if (!regiao) { prevEl.style.display = 'none'; return; }
+        const cor = REGION_COLORS[regiao] || '#94a3b8';
+        dotEl.style.background = cor;
+        txtEl.textContent = `Região detectada: ${regiao}`;
+        txtEl.style.color = cor;
+        prevEl.style.display = 'flex';
+      }
+
+      function renderSuggestions(q) {
+        if (!q || q.length < 2) { box.classList.remove('show'); return; }
+        const matches = LOCAL_CATALOG.filter(l =>
+          l.nome.toLowerCase().includes(q.toLowerCase()) ||
+          l.tipo.toLowerCase().includes(q.toLowerCase()) ||
+          l.regiao.toLowerCase().includes(q.toLowerCase())
+        ).slice(0, 8);
+
+        if (!matches.length) { box.classList.remove('show'); return; }
+        activeIdx = -1;
+        box.innerHTML = matches.map((m, i) => {
+          const cor = REGION_COLORS[m.regiao] || '#94a3b8';
+          return `<div class="local-sugg-item" data-idx="${i}" data-nome="${m.nome}" data-regiao="${m.regiao}">
+            <span class="local-sugg-icon">${m.icon}</span>
+            <div style="flex:1;min-width:0;">
+              <div class="local-sugg-nome">${m.nome}</div>
+              <div class="local-sugg-tipo">${m.tipo}</div>
+            </div>
+            <span class="local-sugg-regiao" style="background:${cor}20;color:${cor};border:1px solid ${cor}44;">${m.regiao}</span>
+          </div>`;
+        }).join('');
+        box.classList.add('show');
+      }
+
+      function pickItem(nome, regiao) {
+        input.value = nome;
+        box.classList.remove('show');
+        showPreview(regiao);
+        // Destaca região no mapa se disponível
+        if (typeof selectRegion === 'function') selectRegion(regiao);
+      }
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        renderSuggestions(q);
+        // Preview em tempo real mesmo sem selecionar da lista
+        const auto = detectRegionFromLocal(q);
+        showPreview(q.length >= 2 ? auto : null);
+      });
+
+      input.addEventListener('keydown', e => {
+        const items = box.querySelectorAll('.local-sugg-item');
+        if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx+1, items.length-1); items.forEach((el,i) => el.classList.toggle('selected', i===activeIdx)); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx-1, 0); items.forEach((el,i) => el.classList.toggle('selected', i===activeIdx)); }
+        else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); const el = items[activeIdx]; if (el) pickItem(el.dataset.nome, el.dataset.regiao); }
+        else if (e.key === 'Escape') box.classList.remove('show');
+      });
+
+      box.addEventListener('mousedown', e => {
+        const item = e.target.closest('.local-sugg-item');
+        if (item) { e.preventDefault(); pickItem(item.dataset.nome, item.dataset.regiao); }
+      });
+
+      document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !box.contains(e.target)) box.classList.remove('show');
+      });
+    })();
+
+    // Destaca a região no mapa e mostra mensagem
+    window.highlightLocalOnMap = function(local, regiao) {
+      const mapSection = document.querySelector('.region-map-card');
+      if (mapSection) mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (typeof selectRegion === 'function') selectRegion(regiao || detectRegionFromLocal(local));
+      const rd = document.getElementById('region-detected');
+      if (rd) {
+        const cor = REGION_COLORS[regiao] || '#94a3b8';
+        rd.style.color = cor;
+        rd.innerHTML = `📍 <strong>${local}</strong> → Região <strong>${regiao}</strong>`;
+      }
+    };
 
     window.selectRegion = function(region) {
       const rd = document.getElementById('region-detected');
@@ -1020,25 +1397,43 @@
 
     function renderChamadoItem(c, urgencyLabels) {
       const statusLabel = c.status === 'concluido' ? 'Concluído' : c.status === 'pendente' ? 'Pendente' : 'A Fazer';
-      const toggleLabel = c.status === 'concluido' ? 'Reabrir' : c.status === 'pendente' ? 'Concluir' : 'Pendente';
+      const isConcluido = c.status === 'concluido';
+      const toggleLabel = isConcluido ? '↩ Reabrir' : '✓ Concluir';
+      const regiao = c.regiao || detectRegionFromLocal(c.local) || 'Centro';
+      const regCor = REGION_COLORS[regiao] || '#94a3b8';
+
+      const localLower = (c.local || '').toLowerCase();
+      let localIcon = '📍';
+      if (localLower.includes('escola') || localLower.includes('e.m.')) localIcon = '🏫';
+      else if (localLower.includes('ciei')) localIcon = '🎒';
+      else if (localLower.includes('esf') || localLower.includes('ubs') || localLower.includes('posto') || localLower.includes('saúde')) localIcon = '🏥';
+      else if (localLower.includes('prefeitura') || localLower.includes('secretaria') || localLower.includes('creas')) localIcon = '🏛️';
+
       return `
         <div class="chamado-item ${c.status}" id="chamado-${c.id}">
           <div class="chamado-info">
-            <div class="chamado-title ${c.status === 'concluido' ? 'concluido' : ''}">${escapeHtml(c.problem)}</div>
-            <div class="chamado-date">
-              Chamado #${escapeHtml(String(c.numero))} &bull; Local: ${escapeHtml(c.local)}
-              &bull; <strong style="color:${REGION_COLORS[c.regiao]||'#94a3b8'}">${c.regiao || 'N/A'}</strong>
+            <div class="chamado-title ${isConcluido ? 'concluido' : ''}">${escapeHtml(c.problem)}</div>
+            <div class="chamado-date" style="display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin-top:3px;">
+              <span>Chamado #${escapeHtml(String(c.numero))}</span>
+              <span style="color:#334155">&bull;</span>
+              <span>${localIcon} <span class="chamado-local-link" onclick="highlightLocalOnMap('${escapeHtml(c.local).replace(/'/g,"\\'")}','${regiao}')" title="Ver no mapa">${escapeHtml(c.local)}</span></span>
+              <span class="chamado-regiao-badge"
+                style="background:${regCor}18;color:${regCor};border-color:${regCor}44;"
+                onclick="selectRegion('${regiao}')" title="Ver região ${regiao} no mapa">
+                🗺️ ${regiao}
+              </span>
             </div>
-            <div class="chamado-date">Modificado em: ${formatDate(c.modifiedAt)}</div>
+            <div class="chamado-date" style="margin-top:2px;">Modificado em: ${formatDate(c.modifiedAt)}</div>
           </div>
           <span class="urgency-badge urgency-${c.urgency || 'media'}">${urgencyLabels[c.urgency] || 'Média'}</span>
           <span class="chamado-status ${c.status}">${statusLabel}</span>
           <div class="chamado-actions">
-            <button class="btn btn-edit" onclick="editChamado('${c.id}')">Editar</button>
-            <button class="btn btn-toggle ${c.status === 'concluido' ? 'done' : ''}" onclick="toggleChamado('${c.id}')">${toggleLabel}</button>
-            <button class="btn btn-danger" onclick="deleteChamado('${c.id}')">Excluir</button>
+            <button class="btn btn-edit" onclick="openInlineEdit('${c.id}')">✏️ Editar</button>
+            <button class="btn btn-toggle ${isConcluido ? 'done' : ''}" onclick="toggleChamado('${c.id}')">${toggleLabel}</button>
+            <button class="btn btn-danger" onclick="deleteChamado('${c.id}')">🗑</button>
           </div>
-        </div>`;
+        </div>
+        <div class="inline-edit-panel" id="edit-panel-${c.id}" style="display:none;"></div>`;
     }
 
     async function renderChamados() {

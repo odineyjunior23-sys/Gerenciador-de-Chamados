@@ -1635,6 +1635,12 @@
     initCalendarSelects();
     renderChamados();
 
+    // ── Auto-atualização a cada 5 minutos ──
+    const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 min
+    setInterval(async () => {
+      await renderChamados();
+    }, AUTO_REFRESH_MS);
+
     setTimeout(() => {
       if (typeof L !== 'undefined') initLeafletMap();
       else setTimeout(initLeafletMap, 500);

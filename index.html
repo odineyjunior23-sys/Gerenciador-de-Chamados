@@ -1298,6 +1298,11 @@
       'clementino de barros':'Sul','clementino barros':'Sul',
       'cambaraí':'Sul','cambarai':'Sul',
       'valinhos':'Leste','assentamento valinhos':'Leste','saúde no campo':'Leste',
+      // Novos locais
+      'cas':'Norte','centro de assistência à saúde':'Norte','centro de assistencia a saude':'Norte',
+      'estádio luiz gonzaga':'Norte','loucao':'Norte','loucão':'Norte','luiz gonzaga silva braga':'Norte',
+      'procon':'Centro','procon maracaju':'Centro',
+      'centro cultural':'Centro','francisco moacir':'Centro','moacir feitosa':'Centro',
     };
 
     function detectRegionFromLocal(local) {
@@ -1444,6 +1449,12 @@
         [-21.6282958,-55.1675409,'🏥','#f43f5e','ESF – Dr. Clementino de Barros Wanderley','UBS / ESF','Cambaraí','R. Pereira do Lago – Cambaraí','(67) 3454-5194','⭐ 5.0','Seg–Sex 13h–17h'],
         [-21.6286842,-55.1722274,'🏥','#f43f5e','ESF Cambaraí','UBS / ESF','Cambaraí','R. Pereira do Lago s/n – Cambaraí','','',''],
         [-21.3071892,-55.3002080,'🏥','#64748b','UBS Saúde no Campo – Assentamento Valinhos','UBS Rural','Zona Rural (Assentamento Valinhos)','Assentamento Valinhos – Maracaju','(67) 3454-1320','','Seg–Sex 13h–17h'],
+
+        // ── Novos locais adicionados ──
+        [-21.6072499,-55.1660148,'🏥','#06b6d4','CAS – Centro de Assistência à Saúde','CAS','Vila Juquita','R. Joaquim Ferreira de Azambuja, 2001 – Vila Juquita','(67) 3454-3071','⭐ 4.5','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6174464,-55.1698249,'⚽','#f59e0b','Estádio Luiz Gonzaga Silva Braga (Loucão)','Estádio / Arena','Vila Prateada','Av. Marechal Floriano, 645–697 – Vila Prateada','(67) 3454-1221','⭐ 4.2',''],
+        [-21.6354062,-55.1579974,'⚖️','#8b5cf6','Procon Maracaju','Procon','Centro','R. 11 de Junho – Centro','(67) 98466-0884','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6249388,-55.1558813,'🎭','#ec4899','Centro Cultural Francisco Moacir Feitosa Araújo','Centro Cultural','Centro','Av. Mario Corrêa, 291 – Centro','(67) 3454-2569','⭐ 5.0','Seg–Sex 7h–22h / Sáb 7h–11h'],
       ];
       postos.forEach(p => addMarker(...p));
     }
@@ -1486,6 +1497,11 @@
       { nome:'ESF – Dr. Clementino de Barros Wanderley', tipo:'UBS / ESF', icon:'🏥', regiao:'Sul' },
       { nome:'ESF Cambaraí',                           tipo:'UBS / ESF', icon:'🏥', regiao:'Sul' },
       { nome:'UBS Saúde no Campo – Valinhos',          tipo:'UBS Rural', icon:'🏥', regiao:'Leste' },
+      // Novos locais
+      { nome:'CAS – Centro de Assistência à Saúde',              tipo:'CAS', icon:'🏥', regiao:'Norte' },
+      { nome:'Estádio Luiz Gonzaga Silva Braga (Loucão)',         tipo:'Estádio / Arena', icon:'⚽', regiao:'Norte' },
+      { nome:'Procon Maracaju',                                   tipo:'Procon', icon:'⚖️', regiao:'Centro' },
+      { nome:'Centro Cultural Francisco Moacir Feitosa Araújo',  tipo:'Centro Cultural', icon:'🎭', regiao:'Centro' },
     ];
 
     (function initLocalAutocomplete() {

@@ -1303,6 +1303,16 @@
       'estádio luiz gonzaga':'Norte','loucao':'Norte','loucão':'Norte','luiz gonzaga silva braga':'Norte',
       'procon':'Centro','procon maracaju':'Centro',
       'centro cultural':'Centro','francisco moacir':'Centro','moacir feitosa':'Centro',
+      // Novos locais
+      'museu municipal':'Centro','museu':'Centro',
+      'biblioteca pública':'Centro','biblioteca publica':'Centro','biblioteca de maracaju':'Centro',
+      'escola agrícola':'Leste','escola agricola':'Leste','escola agrícola maracaju':'Leste','escola agricola maracaju':'Leste',
+      'esf marcondes':'Leste','vitória marcondes':'Leste','vitoria marcondes':'Leste','josé alves marcondes':'Leste','jose alves marcondes':'Leste',
+      'academia da saúde':'Norte','academia de saúde':'Norte','academia saude':'Norte','academia da saude':'Norte',
+      'conviver':'Centro','projeto conviver':'Centro','ilda fernandes':'Centro',
+      'conselho tutelar':'Centro','conselho tutelar maracaju':'Centro',
+      'pac maracaju':'Centro','posto de atendimento ao contribuinte':'Centro','pac – posto':'Centro','pac - posto':'Centro',
+      'cadastro único':'Oeste','cadunico':'Oeste','cadúnico':'Oeste','cadastro unico':'Oeste',
     };
 
     function detectRegionFromLocal(local) {
@@ -1455,6 +1465,17 @@
         [-21.6174464,-55.1698249,'⚽','#f59e0b','Estádio Luiz Gonzaga Silva Braga (Loucão)','Estádio / Arena','Vila Prateada','Av. Marechal Floriano, 645–697 – Vila Prateada','(67) 3454-1221','⭐ 4.2',''],
         [-21.6354062,-55.1579974,'⚖️','#8b5cf6','Procon Maracaju','Procon','Centro','R. 11 de Junho – Centro','(67) 98466-0884','','Seg–Sex 7h–11h / 13h–17h'],
         [-21.6249388,-55.1558813,'🎭','#ec4899','Centro Cultural Francisco Moacir Feitosa Araújo','Centro Cultural','Centro','Av. Mario Corrêa, 291 – Centro','(67) 3454-2569','⭐ 5.0','Seg–Sex 7h–22h / Sáb 7h–11h'],
+
+        // ── Novos locais adicionados (Museu, Biblioteca, Escola Agrícola, ESF Marcondes, Academia, Conviver, Conselho Tutelar, PAC) ──
+        [-21.6262000,-55.1580000,'🏛️','#6366f1','Museu Municipal de Maracaju','Museu','Centro','Av. João Pedro Fernandes – Centro','','',''],
+        [-21.6250000,-55.1570000,'📚','#0ea5e9','Biblioteca Pública de Maracaju','Biblioteca','Centro','Av. Mario Corrêa, 60 – Centro','','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6480000,-55.1600000,'🎓','#84cc16','Escola Agrícola Maracaju','Escola Agrícola','Leste','Zona rural / área periférica – Maracaju','','','Manhã/Tarde (período escolar)'],
+        [-21.7316921,-55.5082226,'🏥','#f43f5e','UBS Vitória Marcondes Terra ESF José Alves Marcondes','UBS / ESF','Leste','Av. Coronel Francisco Alves – Vista Alegre','','','Seg–Sex 13h–17h'],
+        [-21.6030000,-55.1700000,'🏃','#10b981','Academia de Saúde de Maracaju','Academia da Saúde','Norte','Vila Prateada – Maracaju','','','Seg–Sex 7h–16h'],
+        [-21.6240000,-55.1590000,'👵','#f59e0b','Projeto Conviver Maracaju – Ilda Fernandes Aguiar','Serviço de Convivência','Centro','Rua Antônio José Ferreira – Centro','','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6238000,-55.1592000,'⚖️','#ef4444','Conselho Tutelar Maracaju MS','Conselho Tutelar','Centro','Rua Antônio José Ferreira – Centro (anexo Conviver)','','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6245000,-55.1560000,'🧾','#8b5cf6','PAC – Posto de Atendimento ao Contribuinte','PAC','Centro','Alameda dos Ipês, 80 – Centro','','','Seg–Sex 7h–11h / 13h–17h'],
+        [-21.6023000,-55.1750000,'📦','#f97316','Cadastro Único (CADÚNICO)','Cadastro Único','Oeste','R. Sebastião Estanislau Silva, 2568 – Vila Juquita','','','Seg–Sex 7h–11h / 13h–17h'],
       ];
       postos.forEach(p => addMarker(...p));
     }
@@ -1502,6 +1523,16 @@
       { nome:'Estádio Luiz Gonzaga Silva Braga (Loucão)',         tipo:'Estádio / Arena', icon:'⚽', regiao:'Norte' },
       { nome:'Procon Maracaju',                                   tipo:'Procon', icon:'⚖️', regiao:'Centro' },
       { nome:'Centro Cultural Francisco Moacir Feitosa Araújo',  tipo:'Centro Cultural', icon:'🎭', regiao:'Centro' },
+      // Novos locais
+      { nome:'Museu Municipal de Maracaju',                       tipo:'Museu', icon:'🏛️', regiao:'Centro' },
+      { nome:'Biblioteca Pública de Maracaju',                    tipo:'Biblioteca', icon:'📚', regiao:'Centro' },
+      { nome:'Escola Agrícola Maracaju',                          tipo:'Escola Agrícola', icon:'🎓', regiao:'Leste' },
+      { nome:'UBS Vitória Marcondes Terra ESF José Alves Marcondes', tipo:'UBS / ESF', icon:'🏥', regiao:'Leste' },
+      { nome:'Academia de Saúde de Maracaju',                     tipo:'Academia da Saúde', icon:'🏃', regiao:'Norte' },
+      { nome:'Projeto Conviver Maracaju – Ilda Fernandes Aguiar', tipo:'Serviço de Convivência', icon:'👵', regiao:'Centro' },
+      { nome:'Conselho Tutelar Maracaju MS',                      tipo:'Conselho Tutelar', icon:'⚖️', regiao:'Centro' },
+      { nome:'PAC – Posto de Atendimento ao Contribuinte',        tipo:'PAC', icon:'🧾', regiao:'Centro' },
+      { nome:'Cadastro Único (CADÚNICO)',                          tipo:'Cadastro Único', icon:'📦', regiao:'Oeste' },
     ];
 
     (function initLocalAutocomplete() {
